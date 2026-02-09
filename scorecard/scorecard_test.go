@@ -38,7 +38,7 @@ func TestGetScore(t *testing.T) {
 				{Name: "Vulnerabilities", Score: 0, Reason: "79 existing vulnerabilities detected"},
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
@@ -77,7 +77,7 @@ func TestGetScoreStripsScheme(t *testing.T) {
 			return
 		}
 		resp := scorecardResponse{Score: 5.0, Date: "2026-01-01"}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
@@ -100,7 +100,7 @@ func TestDefaultUserAgent(t *testing.T) {
 	var gotUA string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotUA = r.Header.Get("User-Agent")
-		json.NewEncoder(w).Encode(scorecardResponse{Score: 5.0})
+		_ = json.NewEncoder(w).Encode(scorecardResponse{Score: 5.0})
 	}))
 	defer srv.Close()
 
@@ -118,7 +118,7 @@ func TestCustomUserAgent(t *testing.T) {
 	var gotUA string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotUA = r.Header.Get("User-Agent")
-		json.NewEncoder(w).Encode(scorecardResponse{Score: 5.0})
+		_ = json.NewEncoder(w).Encode(scorecardResponse{Score: 5.0})
 	}))
 	defer srv.Close()
 

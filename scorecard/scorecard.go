@@ -67,7 +67,7 @@ func (c *Client) GetScore(ctx context.Context, repoURL string) (*Result, error) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("scorecard: %s", resp.Status)

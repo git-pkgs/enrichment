@@ -236,6 +236,59 @@ func TestDepsDevGetVersion(t *testing.T) {
 	}
 }
 
+func TestDepsDevUserAgent(t *testing.T) {
+	var gotUA string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotUA = r.Header.Get("User-Agent")
+		json.NewEncoder(w).Encode(depsdevPackageResponse{})
+	}))
+	defer srv.Close()
+
+	t.Run("default", func(t *testing.T) {
+		client := NewDepsDevClient()
+		client.baseURL = srv.URL
+		client.httpClient = srv.Client()
+		_, _ = client.GetVersions(context.Background(), "pkg:npm/lodash")
+		if gotUA != "enrichment" {
+			t.Errorf("default User-Agent = %q, want %q", gotUA, "enrichment")
+		}
+	})
+
+	t.Run("custom", func(t *testing.T) {
+		client := newDepsDevClient("git-pkgs/test")
+		client.baseURL = srv.URL
+		client.httpClient = srv.Client()
+		_, _ = client.GetVersions(context.Background(), "pkg:npm/lodash")
+		if gotUA != "git-pkgs/test" {
+			t.Errorf("custom User-Agent = %q, want %q", gotUA, "git-pkgs/test")
+		}
+	})
+}
+
+func TestRegistriesClientUserAgent(t *testing.T) {
+	client := newRegistriesClient("custom-agent")
+	if client.client.UserAgent != "custom-agent" {
+		t.Errorf("UserAgent = %q, want %q", client.client.UserAgent, "custom-agent")
+	}
+}
+
+func TestNewClientWithUserAgent(t *testing.T) {
+	t.Setenv("GIT_PKGS_DIRECT", "1")
+
+	client, err := NewClient(WithUserAgent("test-ua"))
+	if err != nil {
+		t.Fatalf("NewClient() error: %v", err)
+	}
+
+	rc, ok := client.(*RegistriesClient)
+	if !ok {
+		t.Fatalf("expected *RegistriesClient, got %T", client)
+	}
+	if rc.client.UserAgent != "test-ua" {
+		t.Errorf("UserAgent = %q, want %q", rc.client.UserAgent, "test-ua")
+	}
+}
+
 func TestDepsDevBulkLookup(t *testing.T) {
 	callCount := 0
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

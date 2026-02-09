@@ -6,6 +6,30 @@ import (
 	"strings"
 )
 
+const defaultUserAgent = "enrichment"
+
+// Option configures an enrichment client.
+type Option func(*options)
+
+type options struct {
+	userAgent string
+}
+
+// WithUserAgent sets the User-Agent header for API requests.
+func WithUserAgent(ua string) Option {
+	return func(o *options) {
+		o.userAgent = ua
+	}
+}
+
+func buildOptions(opts []Option) options {
+	o := options{userAgent: defaultUserAgent}
+	for _, opt := range opts {
+		opt(&o)
+	}
+	return o
+}
+
 // NewClient creates an enrichment client based on configuration.
 //
 // By default, uses a hybrid approach:
@@ -15,11 +39,12 @@ import (
 // To skip ecosyste.ms and query all registries directly:
 //   - Set GIT_PKGS_DIRECT=1 environment variable, or
 //   - Set git config: git config --global pkgs.direct true
-func NewClient() (Client, error) {
+func NewClient(opts ...Option) (Client, error) {
+	o := buildOptions(opts)
 	if directMode() {
-		return NewRegistriesClient(), nil
+		return newRegistriesClient(o.userAgent), nil
 	}
-	return NewHybridClient()
+	return newHybridClient(o.userAgent)
 }
 
 // directMode checks if direct registry mode is enabled.

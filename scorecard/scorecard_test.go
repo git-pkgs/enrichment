@@ -96,6 +96,42 @@ func TestGetScoreStripsScheme(t *testing.T) {
 	}
 }
 
+func TestDefaultUserAgent(t *testing.T) {
+	var gotUA string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotUA = r.Header.Get("User-Agent")
+		json.NewEncoder(w).Encode(scorecardResponse{Score: 5.0})
+	}))
+	defer srv.Close()
+
+	client := New()
+	client.baseURL = srv.URL
+	client.httpClient = srv.Client()
+	_, _ = client.GetScore(context.Background(), "github.com/test/repo")
+
+	if gotUA != "enrichment" {
+		t.Errorf("default User-Agent = %q, want %q", gotUA, "enrichment")
+	}
+}
+
+func TestCustomUserAgent(t *testing.T) {
+	var gotUA string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotUA = r.Header.Get("User-Agent")
+		json.NewEncoder(w).Encode(scorecardResponse{Score: 5.0})
+	}))
+	defer srv.Close()
+
+	client := New("git-pkgs/test")
+	client.baseURL = srv.URL
+	client.httpClient = srv.Client()
+	_, _ = client.GetScore(context.Background(), "github.com/test/repo")
+
+	if gotUA != "git-pkgs/test" {
+		t.Errorf("User-Agent = %q, want %q", gotUA, "git-pkgs/test")
+	}
+}
+
 func TestGetScoreNotFound(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)

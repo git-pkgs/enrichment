@@ -172,7 +172,7 @@ func TestDepsDevGetVersions(t *testing.T) {
 				},
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
@@ -214,7 +214,7 @@ func TestDepsDevGetVersion(t *testing.T) {
 				{Label: "HOMEPAGE", URL: "https://lodash.com"},
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
@@ -240,7 +240,7 @@ func TestDepsDevUserAgent(t *testing.T) {
 	var gotUA string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotUA = r.Header.Get("User-Agent")
-		json.NewEncoder(w).Encode(depsdevPackageResponse{})
+		_ = json.NewEncoder(w).Encode(depsdevPackageResponse{})
 	}))
 	defer srv.Close()
 
@@ -308,7 +308,7 @@ func TestDepsDevBulkLookup(t *testing.T) {
 					},
 				},
 			}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 		} else {
 			// Version response
 			resp := depsdevVersionResponse{
@@ -326,7 +326,7 @@ func TestDepsDevBulkLookup(t *testing.T) {
 					{Label: "SOURCE_REPO", URL: "https://github.com/lodash/lodash"},
 				},
 			}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 		}
 	}))
 	defer srv.Close()

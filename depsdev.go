@@ -16,15 +16,21 @@ import (
 type DepsDevClient struct {
 	baseURL    string
 	httpClient *http.Client
+	userAgent  string
 }
 
 // NewDepsDevClient creates a client for the deps.dev API.
 func NewDepsDevClient() *DepsDevClient {
+	return newDepsDevClient(defaultUserAgent)
+}
+
+func newDepsDevClient(userAgent string) *DepsDevClient {
 	return &DepsDevClient{
 		baseURL: "https://api.deps.dev",
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		userAgent: userAgent,
 	}
 }
 
@@ -184,12 +190,13 @@ func (c *DepsDevClient) getPackage(ctx context.Context, system, name string) (*d
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("User-Agent", c.userAgent)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("deps.dev: %s", resp.Status)
@@ -210,12 +217,13 @@ func (c *DepsDevClient) getVersion(ctx context.Context, system, name, version st
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("User-Agent", c.userAgent)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("deps.dev: %s", resp.Status)

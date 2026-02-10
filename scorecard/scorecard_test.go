@@ -38,7 +38,7 @@ func TestGetScore(t *testing.T) {
 				{Name: "Vulnerabilities", Score: 0, Reason: "79 existing vulnerabilities detected"},
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
@@ -77,7 +77,7 @@ func TestGetScoreStripsScheme(t *testing.T) {
 			return
 		}
 		resp := scorecardResponse{Score: 5.0, Date: "2026-01-01"}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
@@ -93,6 +93,42 @@ func TestGetScoreStripsScheme(t *testing.T) {
 	}
 	if result.Score != 5.0 {
 		t.Errorf("Score = %f, want 5.0", result.Score)
+	}
+}
+
+func TestDefaultUserAgent(t *testing.T) {
+	var gotUA string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotUA = r.Header.Get("User-Agent")
+		_ = json.NewEncoder(w).Encode(scorecardResponse{Score: 5.0})
+	}))
+	defer srv.Close()
+
+	client := New()
+	client.baseURL = srv.URL
+	client.httpClient = srv.Client()
+	_, _ = client.GetScore(context.Background(), "github.com/test/repo")
+
+	if gotUA != "enrichment" {
+		t.Errorf("default User-Agent = %q, want %q", gotUA, "enrichment")
+	}
+}
+
+func TestCustomUserAgent(t *testing.T) {
+	var gotUA string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotUA = r.Header.Get("User-Agent")
+		_ = json.NewEncoder(w).Encode(scorecardResponse{Score: 5.0})
+	}))
+	defer srv.Close()
+
+	client := New("git-pkgs/test")
+	client.baseURL = srv.URL
+	client.httpClient = srv.Client()
+	_, _ = client.GetScore(context.Background(), "github.com/test/repo")
+
+	if gotUA != "git-pkgs/test" {
+		t.Errorf("User-Agent = %q, want %q", gotUA, "git-pkgs/test")
 	}
 }
 

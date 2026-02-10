@@ -29,15 +29,21 @@ type Check struct {
 type Client struct {
 	baseURL    string
 	httpClient *http.Client
+	userAgent  string
 }
 
 // New creates a new scorecard client.
-func New() *Client {
+func New(userAgent ...string) *Client {
+	ua := "enrichment"
+	if len(userAgent) > 0 && userAgent[0] != "" {
+		ua = userAgent[0]
+	}
 	return &Client{
 		baseURL: "https://api.securityscorecards.dev",
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		userAgent: ua,
 	}
 }
 
@@ -55,12 +61,13 @@ func (c *Client) GetScore(ctx context.Context, repoURL string) (*Result, error) 
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("User-Agent", c.userAgent)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("scorecard: %s", resp.Status)

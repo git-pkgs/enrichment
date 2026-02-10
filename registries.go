@@ -17,9 +17,13 @@ type RegistriesClient struct {
 
 // NewRegistriesClient creates a client that queries registries directly.
 func NewRegistriesClient() *RegistriesClient {
-	return &RegistriesClient{
-		client: registries.DefaultClient(),
-	}
+	return newRegistriesClient(defaultUserAgent)
+}
+
+func newRegistriesClient(userAgent string) *RegistriesClient {
+	c := registries.DefaultClient()
+	c.UserAgent = userAgent
+	return &RegistriesClient{client: c}
 }
 
 func (c *RegistriesClient) BulkLookup(ctx context.Context, purls []string) (map[string]*PackageInfo, error) {

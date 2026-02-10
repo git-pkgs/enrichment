@@ -16,7 +16,11 @@ type EcosystemsClient struct {
 
 // NewEcosystemsClient creates a client that uses the ecosyste.ms API.
 func NewEcosystemsClient() (*EcosystemsClient, error) {
-	client, err := ecosystems.NewClient("git-pkgs/1.0")
+	return newEcosystemsClient(defaultUserAgent)
+}
+
+func newEcosystemsClient(userAgent string) (*EcosystemsClient, error) {
+	client, err := ecosystems.NewClient(userAgent)
 	if err != nil {
 		return nil, err
 	}

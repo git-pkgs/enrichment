@@ -15,13 +15,17 @@ type HybridClient struct {
 
 // NewHybridClient creates a client that routes based on PURL qualifiers.
 func NewHybridClient() (*HybridClient, error) {
-	eco, err := NewEcosystemsClient()
+	return newHybridClient(defaultUserAgent)
+}
+
+func newHybridClient(userAgent string) (*HybridClient, error) {
+	eco, err := newEcosystemsClient(userAgent)
 	if err != nil {
 		return nil, err
 	}
 	return &HybridClient{
 		ecosystems: eco,
-		registries: NewRegistriesClient(),
+		registries: newRegistriesClient(userAgent),
 	}, nil
 }
 

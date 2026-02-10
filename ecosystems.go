@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/ecosyste-ms/ecosystems-go"
-	"github.com/git-pkgs/purl"
 	"github.com/git-pkgs/registries"
 )
 
@@ -68,12 +67,12 @@ func (c *EcosystemsClient) BulkLookup(ctx context.Context, purls []string) (map[
 }
 
 func (c *EcosystemsClient) GetVersions(ctx context.Context, purlStr string) ([]VersionInfo, error) {
-	p, err := purl.Parse(purlStr)
+	p, err := ecosystems.ParsePURL(purlStr)
 	if err != nil {
 		return nil, err
 	}
 
-	versions, err := c.client.GetAllVersionsPURL(ctx, p.PackageURL)
+	versions, err := c.client.GetAllVersionsPURL(ctx, p)
 	if err != nil {
 		return nil, err
 	}
@@ -90,12 +89,12 @@ func (c *EcosystemsClient) GetVersions(ctx context.Context, purlStr string) ([]V
 }
 
 func (c *EcosystemsClient) GetVersion(ctx context.Context, purlStr string) (*VersionInfo, error) {
-	p, err := purl.Parse(purlStr)
+	p, err := ecosystems.ParsePURL(purlStr)
 	if err != nil {
 		return nil, err
 	}
 
-	v, err := c.client.GetVersionPURL(ctx, p.PackageURL)
+	v, err := c.client.GetVersionPURL(ctx, p)
 	if err != nil {
 		return nil, err
 	}

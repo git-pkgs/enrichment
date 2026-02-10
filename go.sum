@@ -5,8 +5,8 @@ github.com/bmatcuk/doublestar v1.1.1/go.mod h1:UD6OnuiIn0yFxxA2le/rnRU1G4RaI4UvF
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/ecosyste-ms/ecosystems-go v0.1.0 h1:jMinQqCsvPhPPmm95KsOOvMZH/GOed6ThIljfMRkQrk=
-github.com/ecosyste-ms/ecosystems-go v0.1.0/go.mod h1:XsvYyfIYrGJLKV7B+kxUJ2UOhSvcfUstunnakSqUw7c=
+github.com/ecosyste-ms/ecosystems-go v0.1.1 h1:YYiBK9TCCTeE+BtmpN2FssaRFcmF+T0v4LrupIOjehQ=
+github.com/ecosyste-ms/ecosystems-go v0.1.1/go.mod h1:VczXs1CO9nL8XbL1NwvgmwIaqzMsAxcsXnTpRtwi9gU=
 github.com/git-pkgs/packageurl-go v0.2.1 h1:j6VnjJiYS9b1nTLfJGsG6SLaA7Nk6Io+ta8grOyTa4o=
 github.com/git-pkgs/packageurl-go v0.2.1/go.mod h1:rcIxiG37BlQLB6FZfgdj9Fm7yjhRQd3l+5o7J0QPAk4=
 github.com/git-pkgs/purl v0.1.6 h1:WDganE1yjSA2BYjXPpz9NVdsh/YRrGj2CkZ6ScyzIKs=
@@ -24,8 +24,6 @@ github.com/google/uuid v1.5.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+
 github.com/juju/gnuflag v0.0.0-20171113085948-2ce1bb71843d/go.mod h1:2PavIy+JPciBPrBUjwbNvtwB6RQlve+hkpll6QSNmOE=
 github.com/oapi-codegen/runtime v1.1.2 h1:P2+CubHq8fO4Q6fV1tqDBZHCwpVpvPg7oKiYzQgXIyI=
 github.com/oapi-codegen/runtime v1.1.2/go.mod h1:SK9X900oXmPWilYR5/WKPzt3Kqxn/uS/+lbpREv+eCg=
-github.com/package-url/packageurl-go v0.1.3 h1:4juMED3hHiz0set3Vq3KeQ75KD1avthoXLtmE3I0PLs=
-github.com/package-url/packageurl-go v0.1.3/go.mod h1:nKAWB8E6uk1MHqiS/lQb9pYBGH2+mdJ2PJc2s50dQY0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/spkg/bom v0.0.0-20160624110644-59b7046e48ad/go.mod h1:qLr4V1qq6nMqFKkMo8ZTx3f+BZEkzsRUY10Xsm2mwU0=

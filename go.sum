@@ -9,8 +9,8 @@ github.com/ecosyste-ms/ecosystems-go v0.1.1 h1:YYiBK9TCCTeE+BtmpN2FssaRFcmF+T0v4
 github.com/ecosyste-ms/ecosystems-go v0.1.1/go.mod h1:VczXs1CO9nL8XbL1NwvgmwIaqzMsAxcsXnTpRtwi9gU=
 github.com/git-pkgs/packageurl-go v0.2.1 h1:j6VnjJiYS9b1nTLfJGsG6SLaA7Nk6Io+ta8grOyTa4o=
 github.com/git-pkgs/packageurl-go v0.2.1/go.mod h1:rcIxiG37BlQLB6FZfgdj9Fm7yjhRQd3l+5o7J0QPAk4=
-github.com/git-pkgs/purl v0.1.6 h1:WDganE1yjSA2BYjXPpz9NVdsh/YRrGj2CkZ6ScyzIKs=
-github.com/git-pkgs/purl v0.1.6/go.mod h1:ihlHw3bnSLXat+9Nl9MsJZBYiG7s3NkwmvE3L/Es/sI=
+github.com/git-pkgs/purl v0.1.8 h1:iyjEHM2WIZUL9A3+q9ylrabqILsN4nOay9X6jfEjmzQ=
+github.com/git-pkgs/purl v0.1.8/go.mod h1:ihlHw3bnSLXat+9Nl9MsJZBYiG7s3NkwmvE3L/Es/sI=
 github.com/git-pkgs/registries v0.2.3 h1:KE9QQr+aqO06Jqb2lEfwFJ0Alimfdqmgs/QfgxIh0YU=
 github.com/git-pkgs/registries v0.2.3/go.mod h1:nXiMNoaCum0Sx3ltao5X9JNbR35ujlKMMN+vX8GLgt8=
 github.com/git-pkgs/spdx v0.1.0 h1:kBcB2iIc3A8qSAU/MtqywKslEo+FRct2daFLX+pwZdU=

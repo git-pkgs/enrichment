@@ -1,6 +1,6 @@
 # enrichment
 
-A Go library for fetching package metadata from multiple sources using [PURLs](https://github.com/package-url/purl-spec). It queries the [ecosyste.ms](https://ecosyste.ms) API, [deps.dev](https://deps.dev), or package registries directly, and returns a unified `PackageInfo` struct with license, version, description, and repository information.
+A Go library for fetching package metadata from multiple sources using [PURLs](https://github.com/package-url/purl-spec). It queries the [ecosyste.ms](https://ecosyste.ms) API, [deps.dev](https://deps.dev), or package registries directly, and returns a unified `PackageInfo` struct with license, version, description, repository, and changelog information.
 
 ## Install
 

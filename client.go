@@ -24,15 +24,16 @@ type Client interface {
 
 // PackageInfo contains metadata about a package.
 type PackageInfo struct {
-	Ecosystem     string
-	Name          string
-	LatestVersion string
-	License       string
-	Description   string
-	Homepage      string
-	Repository    string
-	RegistryURL   string
-	Source        string // "ecosystems", "registries", or "depsdev"
+	Ecosystem         string
+	Name              string
+	LatestVersion     string
+	License           string
+	Description       string
+	Homepage          string
+	Repository        string
+	RegistryURL       string
+	ChangelogFilename string
+	Source            string // "ecosystems", "registries", or "depsdev"
 }
 
 // VersionInfo contains metadata about a specific version.

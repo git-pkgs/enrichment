@@ -31,6 +31,69 @@ func TestExtractRegistryURL(t *testing.T) {
 	}
 }
 
+func TestExtractChangelogFilename(t *testing.T) {
+	t.Run("valid nested metadata", func(t *testing.T) {
+		meta := map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"files": map[string]interface{}{
+					"changelog": "CHANGELOG.md",
+				},
+			},
+		}
+		got := extractChangelogFilename(&meta)
+		if got != "CHANGELOG.md" {
+			t.Errorf("got %q, want %q", got, "CHANGELOG.md")
+		}
+	})
+
+	t.Run("nil repo metadata", func(t *testing.T) {
+		got := extractChangelogFilename(nil)
+		if got != "" {
+			t.Errorf("got %q, want empty", got)
+		}
+	})
+
+	t.Run("missing metadata key", func(t *testing.T) {
+		meta := map[string]interface{}{"other": "value"}
+		got := extractChangelogFilename(&meta)
+		if got != "" {
+			t.Errorf("got %q, want empty", got)
+		}
+	})
+
+	t.Run("missing files key", func(t *testing.T) {
+		meta := map[string]interface{}{
+			"metadata": map[string]interface{}{"other": "value"},
+		}
+		got := extractChangelogFilename(&meta)
+		if got != "" {
+			t.Errorf("got %q, want empty", got)
+		}
+	})
+
+	t.Run("wrong type for metadata", func(t *testing.T) {
+		meta := map[string]interface{}{"metadata": "not a map"}
+		got := extractChangelogFilename(&meta)
+		if got != "" {
+			t.Errorf("got %q, want empty", got)
+		}
+	})
+
+	t.Run("wrong type for changelog", func(t *testing.T) {
+		meta := map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"files": map[string]interface{}{
+					"changelog": 42,
+				},
+			},
+		}
+		got := extractChangelogFilename(&meta)
+		if got != "" {
+			t.Errorf("got %q, want empty", got)
+		}
+	})
+}
+
 func TestNewClientDefault(t *testing.T) {
 	t.Setenv("GIT_PKGS_DIRECT", "")
 

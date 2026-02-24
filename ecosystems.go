@@ -61,9 +61,40 @@ func (c *EcosystemsClient) BulkLookup(ctx context.Context, purls []string) (map[
 		if pkg.RepositoryUrl != nil {
 			info.Repository = *pkg.RepositoryUrl
 		}
+		info.ChangelogFilename = extractChangelogFilename(pkg.RepoMetadata)
 		result[purlStr] = info
 	}
 	return result, nil
+}
+
+// extractChangelogFilename digs into the ecosyste.ms RepoMetadata to find the
+// changelog filename at metadata.files.changelog.
+func extractChangelogFilename(repoMetadata *map[string]interface{}) string {
+	if repoMetadata == nil {
+		return ""
+	}
+	meta := *repoMetadata
+	metadataRaw, ok := meta["metadata"]
+	if !ok {
+		return ""
+	}
+	metadata, ok := metadataRaw.(map[string]interface{})
+	if !ok {
+		return ""
+	}
+	filesRaw, ok := metadata["files"]
+	if !ok {
+		return ""
+	}
+	files, ok := filesRaw.(map[string]interface{})
+	if !ok {
+		return ""
+	}
+	filename, ok := files["changelog"].(string)
+	if !ok {
+		return ""
+	}
+	return filename
 }
 
 func (c *EcosystemsClient) GetVersions(ctx context.Context, purlStr string) ([]VersionInfo, error) {

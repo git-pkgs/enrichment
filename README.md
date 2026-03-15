@@ -39,6 +39,39 @@ reg := enrichment.NewRegistriesClient()      // direct registry queries only
 dep := enrichment.NewDepsDevClient()         // deps.dev API only
 ```
 
+## Scorecard
+
+The `scorecard` sub-package queries the [OpenSSF Scorecard](https://securityscorecards.dev) API for repository-level security scores.
+
+```go
+client := scorecard.New()
+result, err := client.GetScore(ctx, "github.com/lodash/lodash")
+fmt.Println(result.Score) // 6.8
+```
+
+## End of Life
+
+The `endoflife` sub-package queries the [endoflife.date](https://endoflife.date) API for product lifecycle data -- release dates, EOL dates, LTS status, and support windows.
+
+```go
+client := endoflife.New()
+
+// All tracked products
+products, err := client.GetAllProducts(ctx)
+
+// All release cycles for a product
+cycles, err := client.GetProduct(ctx, "nodejs")
+for _, c := range cycles {
+    fmt.Printf("%s: eol=%v lts=%v\n", c.Name, c.IsEOL(), c.IsLTS())
+}
+
+// Single cycle
+cycle, err := client.GetCycle(ctx, "python", "3.12")
+fmt.Println(cycle.Latest, cycle.IsEOL())
+```
+
+The `eol`, `lts`, `support`, and `extendedSupport` fields from the API can be either a date or a boolean. The `DateOrBool` type handles both, and the `IsEOL()`, `IsSupported()`, and `IsLTS()` methods on `Cycle` do the right thing regardless.
+
 ## License
 
 MIT

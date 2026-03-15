@@ -1,0 +1,27 @@
+endoflife/endoflife.go
+  a004d12087f27c44 1-230
+endoflife/endoflife_test.go
+  a004d12087f27c44 1-393
+README.md
+  a004d12087f27c44 42-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "17d7fa4d9af0b5551602efa2502c5ffcc8c78144",
+  "prompts": {
+    "a004d12087f27c44": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5c15e12e-a042-4edb-922e-a93895564016",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrew Nesbitt <andrewnez@gmail.com>",
+      "messages": [],
+      "total_additions": 658,
+      "total_deletions": 2,
+      "accepted_lines": 656,
+      "overriden_lines": 0
+    }
+  }
+}

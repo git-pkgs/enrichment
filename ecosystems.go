@@ -62,6 +62,35 @@ func (c *EcosystemsClient) BulkLookup(ctx context.Context, purls []string) (map[
 			info.Repository = *pkg.RepositoryUrl
 		}
 		info.ChangelogFilename = extractChangelogFilename(pkg.RepoMetadata)
+
+		// Popularity and usage
+		info.Downloads = pkg.Downloads
+		if pkg.DownloadsPeriod != nil {
+			info.DownloadsPeriod = *pkg.DownloadsPeriod
+		}
+		info.DependentPackagesCount = pkg.DependentPackagesCount
+		info.DependentReposCount = pkg.DependentReposCount
+
+		// Security advisories
+		for _, adv := range pkg.Advisories {
+			a := Advisory{
+				Identifiers: adv.Identifiers,
+			}
+			if adv.Title != nil {
+				a.Title = *adv.Title
+			}
+			if adv.Severity != nil {
+				a.Severity = *adv.Severity
+			}
+			if adv.CvssScore != nil {
+				a.CVSSScore = *adv.CvssScore
+			}
+			if adv.Url != nil {
+				a.URL = *adv.Url
+			}
+			info.Advisories = append(info.Advisories, a)
+		}
+
 		result[purlStr] = info
 	}
 	return result, nil

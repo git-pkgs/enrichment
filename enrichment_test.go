@@ -94,6 +94,68 @@ func TestExtractChangelogFilename(t *testing.T) {
 	})
 }
 
+func TestAdvisoryMapping(t *testing.T) {
+	title := "Test advisory"
+	severity := "high"
+	cvss := float32(7.5)
+	url := "https://example.com/advisory"
+
+	a := Advisory{
+		Title:       title,
+		Severity:    severity,
+		CVSSScore:   cvss,
+		URL:         url,
+		Identifiers: []string{"CVE-2024-1234", "GHSA-xxxx"},
+	}
+
+	if a.Title != title {
+		t.Errorf("Title = %q, want %q", a.Title, title)
+	}
+	if a.Severity != severity {
+		t.Errorf("Severity = %q, want %q", a.Severity, severity)
+	}
+	if a.CVSSScore != cvss {
+		t.Errorf("CVSSScore = %v, want %v", a.CVSSScore, cvss)
+	}
+	if a.URL != url {
+		t.Errorf("URL = %q, want %q", a.URL, url)
+	}
+	if len(a.Identifiers) != 2 || a.Identifiers[0] != "CVE-2024-1234" {
+		t.Errorf("Identifiers = %v, want [CVE-2024-1234 GHSA-xxxx]", a.Identifiers)
+	}
+}
+
+func TestPackageInfoPopulationFields(t *testing.T) {
+	info := &PackageInfo{
+		Downloads:              1000000,
+		DownloadsPeriod:        "last-month",
+		DependentPackagesCount: 500,
+		DependentReposCount:    2000,
+		Advisories: []Advisory{
+			{Title: "vuln", Severity: "critical", CVSSScore: 9.8, Identifiers: []string{"CVE-2024-0001"}},
+		},
+	}
+
+	if info.Downloads != 1000000 {
+		t.Errorf("Downloads = %d, want 1000000", info.Downloads)
+	}
+	if info.DownloadsPeriod != "last-month" {
+		t.Errorf("DownloadsPeriod = %q, want %q", info.DownloadsPeriod, "last-month")
+	}
+	if info.DependentPackagesCount != 500 {
+		t.Errorf("DependentPackagesCount = %d, want 500", info.DependentPackagesCount)
+	}
+	if info.DependentReposCount != 2000 {
+		t.Errorf("DependentReposCount = %d, want 2000", info.DependentReposCount)
+	}
+	if len(info.Advisories) != 1 {
+		t.Fatalf("len(Advisories) = %d, want 1", len(info.Advisories))
+	}
+	if info.Advisories[0].Severity != "critical" {
+		t.Errorf("Advisories[0].Severity = %q, want %q", info.Advisories[0].Severity, "critical")
+	}
+}
+
 func TestNewClientDefault(t *testing.T) {
 	t.Setenv("GIT_PKGS_DIRECT", "")
 

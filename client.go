@@ -34,6 +34,24 @@ type PackageInfo struct {
 	RegistryURL       string
 	ChangelogFilename string
 	Source            string // "ecosystems", "registries", or "depsdev"
+
+	// Popularity and usage (ecosyste.ms only)
+	Downloads              int
+	DownloadsPeriod        string // e.g. "last-month"
+	DependentPackagesCount int
+	DependentReposCount    int
+
+	// Security advisories (ecosyste.ms only)
+	Advisories []Advisory
+}
+
+// Advisory is a security advisory affecting a package.
+type Advisory struct {
+	Title       string
+	Severity    string  // e.g. "critical", "high", "medium", "low"
+	CVSSScore   float32
+	URL         string
+	Identifiers []string // CVE IDs and other identifiers
 }
 
 // VersionInfo contains metadata about a specific version.

@@ -1,0 +1,37 @@
+hybrid.go
+  fd464dd0f7187cf0 58-59,61
+depsdev.go
+  fd464dd0f7187cf0 15-16,33
+endoflife/endoflife.go
+  fd464dd0f7187cf0 14-15,145
+scorecard/scorecard.go
+  fd464dd0f7187cf0 14-15,46
+registries.go
+  fd464dd0f7187cf0 44-45
+factory.go
+  fd464dd0f7187cf0 42
+ecosystems.go
+  fd464dd0f7187cf0 8,75,157-182
+enrichment_test.go
+  fd464dd0f7187cf0 11-12,296,322-323,334,358-359,432,446,475-476
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.15",
+  "base_commit_sha": "83dc32777332ad0c7f8a70b00a55363b1d846528",
+  "prompts": {
+    "fd464dd0f7187cf0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bae9231d-9f0b-4d70-92c6-0e3cb2b3f859",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Andrew Nesbitt <andrewnez@gmail.com>",
+      "messages": [],
+      "total_additions": 61,
+      "total_deletions": 46,
+      "accepted_lines": 55,
+      "overriden_lines": 0
+    }
+  }
+}

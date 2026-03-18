@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const defaultHTTPTimeout = 30 * time.Second
+
 // Cycle contains lifecycle information for a single release cycle of a product.
 type Cycle struct {
 	Name              string    `json:"cycle"`
@@ -80,7 +82,7 @@ func (d Date) MarshalJSON() ([]byte, error) {
 	if d.IsZero() {
 		return json.Marshal("")
 	}
-	return json.Marshal(d.Time.Format("2006-01-02"))
+	return json.Marshal(d.Format("2006-01-02"))
 }
 
 // DateOrBool represents a field that can be either a date string ("2025-04-30")
@@ -121,7 +123,7 @@ func (d DateOrBool) MarshalJSON() ([]byte, error) {
 	if d.Date.IsZero() {
 		return json.Marshal(nil)
 	}
-	return json.Marshal(d.Date.Time.Format("2006-01-02"))
+	return json.Marshal(d.Date.Format("2006-01-02"))
 }
 
 // Client queries the endoflife.date API.
@@ -140,7 +142,7 @@ func New(userAgent ...string) *Client {
 	return &Client{
 		baseURL: "https://endoflife.date/api",
 		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: defaultHTTPTimeout,
 		},
 		userAgent: ua,
 	}

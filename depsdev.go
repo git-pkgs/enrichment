@@ -12,6 +12,8 @@ import (
 	"github.com/git-pkgs/purl"
 )
 
+const defaultHTTPTimeout = 30 * time.Second
+
 // DepsDevClient queries the deps.dev v3 REST API.
 type DepsDevClient struct {
 	baseURL    string
@@ -28,7 +30,7 @@ func newDepsDevClient(userAgent string) *DepsDevClient {
 	return &DepsDevClient{
 		baseURL: "https://api.deps.dev",
 		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: defaultHTTPTimeout,
 		},
 		userAgent: userAgent,
 	}

@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const defaultHTTPTimeout = 30 * time.Second
+
 // Result contains the scorecard result for a repository.
 type Result struct {
 	Score  float64
@@ -41,7 +43,7 @@ func New(userAgent ...string) *Client {
 	return &Client{
 		baseURL: "https://api.securityscorecards.dev",
 		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: defaultHTTPTimeout,
 		},
 		userAgent: ua,
 	}

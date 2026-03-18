@@ -55,13 +55,10 @@ func (c *HybridClient) BulkLookup(ctx context.Context, purls []string) (map[stri
 	if len(regPurls) > 0 {
 		regResults, err := c.registries.BulkLookup(ctx, regPurls)
 		if err != nil {
-			for purlStr, info := range regResults {
-				result[purlStr] = info
-			}
-		} else {
-			for purlStr, info := range regResults {
-				result[purlStr] = info
-			}
+			return nil, err
+		}
+		for purlStr, info := range regResults {
+			result[purlStr] = info
 		}
 	}
 

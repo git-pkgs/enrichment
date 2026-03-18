@@ -41,7 +41,8 @@ func (c *RegistriesClient) BulkLookup(ctx context.Context, purls []string) (map[
 	if len(needLatest) > 0 {
 		var mu sync.Mutex
 		var wg sync.WaitGroup
-		sem := make(chan struct{}, 10)
+		const maxConcurrency = 10
+		sem := make(chan struct{}, maxConcurrency)
 
 		for _, purlStr := range needLatest {
 			wg.Add(1)

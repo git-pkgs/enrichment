@@ -8,6 +8,8 @@ import (
 	"testing"
 )
 
+const testVersionLodash = "4.17.21"
+
 func TestExtractRegistryURL(t *testing.T) {
 	tests := []struct {
 		purl      string
@@ -291,7 +293,7 @@ func TestDepsDevGetVersions(t *testing.T) {
 						System  string `json:"system"`
 						Name    string `json:"name"`
 						Version string `json:"version"`
-					}{System: "NPM", Name: "lodash", Version: "4.17.21"},
+					}{System: "NPM", Name: "lodash", Version: testVersionLodash},
 					PublishedAt: "2021-02-20T00:00:00Z",
 					IsDefault:   true,
 				},
@@ -317,8 +319,8 @@ func TestDepsDevGetVersions(t *testing.T) {
 	if versions[0].Number != "4.17.20" {
 		t.Errorf("versions[0].Number = %q, want %q", versions[0].Number, "4.17.20")
 	}
-	if versions[1].Number != "4.17.21" {
-		t.Errorf("versions[1].Number = %q, want %q", versions[1].Number, "4.17.21")
+	if versions[1].Number != testVersionLodash {
+		t.Errorf("versions[1].Number = %q, want %q", versions[1].Number, testVersionLodash)
 	}
 }
 
@@ -329,7 +331,7 @@ func TestDepsDevGetVersion(t *testing.T) {
 				System  string `json:"system"`
 				Name    string `json:"name"`
 				Version string `json:"version"`
-			}{System: "NPM", Name: "lodash", Version: "4.17.21"},
+			}{System: "NPM", Name: "lodash", Version: testVersionLodash},
 			PublishedAt: "2021-02-20T00:00:00Z",
 			Licenses:    []string{"MIT"},
 			Links: []struct {
@@ -353,8 +355,8 @@ func TestDepsDevGetVersion(t *testing.T) {
 		t.Fatalf("GetVersion() error: %v", err)
 	}
 
-	if v.Number != "4.17.21" {
-		t.Errorf("Number = %q, want %q", v.Number, "4.17.21")
+	if v.Number != testVersionLodash {
+		t.Errorf("Number = %q, want %q", v.Number, testVersionLodash)
 	}
 	if v.License != "MIT" {
 		t.Errorf("License = %q, want %q", v.License, "MIT")
@@ -427,7 +429,7 @@ func TestDepsDevBulkLookup(t *testing.T) {
 							System  string `json:"system"`
 							Name    string `json:"name"`
 							Version string `json:"version"`
-						}{System: "NPM", Name: "lodash", Version: "4.17.21"},
+						}{System: "NPM", Name: "lodash", Version: testVersionLodash},
 						PublishedAt: "2021-02-20T00:00:00Z",
 						IsDefault:   true,
 					},
@@ -441,7 +443,7 @@ func TestDepsDevBulkLookup(t *testing.T) {
 					System  string `json:"system"`
 					Name    string `json:"name"`
 					Version string `json:"version"`
-				}{System: "NPM", Name: "lodash", Version: "4.17.21"},
+				}{System: "NPM", Name: "lodash", Version: testVersionLodash},
 				Licenses: []string{"MIT"},
 				Links: []struct {
 					Label string `json:"label"`
@@ -470,8 +472,8 @@ func TestDepsDevBulkLookup(t *testing.T) {
 	if !ok {
 		t.Fatal("expected pkg:npm/lodash in result")
 	}
-	if info.LatestVersion != "4.17.21" {
-		t.Errorf("LatestVersion = %q, want %q", info.LatestVersion, "4.17.21")
+	if info.LatestVersion != testVersionLodash {
+		t.Errorf("LatestVersion = %q, want %q", info.LatestVersion, testVersionLodash)
 	}
 	if info.License != "MIT" {
 		t.Errorf("License = %q, want %q", info.License, "MIT")

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ecosyste-ms/ecosystems-go"
+	"github.com/ecosyste-ms/ecosystems-go/packages"
 	"github.com/git-pkgs/registries"
 )
 
@@ -71,25 +72,7 @@ func (c *EcosystemsClient) BulkLookup(ctx context.Context, purls []string) (map[
 		info.DependentPackagesCount = pkg.DependentPackagesCount
 		info.DependentReposCount = pkg.DependentReposCount
 
-		// Security advisories
-		for _, adv := range pkg.Advisories {
-			a := Advisory{
-				Identifiers: adv.Identifiers,
-			}
-			if adv.Title != nil {
-				a.Title = *adv.Title
-			}
-			if adv.Severity != nil {
-				a.Severity = *adv.Severity
-			}
-			if adv.CvssScore != nil {
-				a.CVSSScore = *adv.CvssScore
-			}
-			if adv.Url != nil {
-				a.URL = *adv.Url
-			}
-			info.Advisories = append(info.Advisories, a)
-		}
+		info.Advisories = convertAdvisories(pkg.Advisories)
 
 		result[purlStr] = info
 	}
@@ -170,4 +153,30 @@ func (c *EcosystemsClient) GetVersion(ctx context.Context, purlStr string) (*Ver
 		info.Integrity = *v.Integrity
 	}
 	return info, nil
+}
+
+func convertAdvisories(advisories []packages.Advisory) []Advisory {
+	if len(advisories) == 0 {
+		return nil
+	}
+	result := make([]Advisory, 0, len(advisories))
+	for _, adv := range advisories {
+		a := Advisory{
+			Identifiers: adv.Identifiers,
+		}
+		if adv.Title != nil {
+			a.Title = *adv.Title
+		}
+		if adv.Severity != nil {
+			a.Severity = *adv.Severity
+		}
+		if adv.CvssScore != nil {
+			a.CVSSScore = *adv.CvssScore
+		}
+		if adv.Url != nil {
+			a.URL = *adv.Url
+		}
+		result = append(result, a)
+	}
+	return result
 }

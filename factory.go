@@ -39,7 +39,7 @@ func buildOptions(opts []Option) options {
 // To skip ecosyste.ms and query all registries directly:
 //   - Set GIT_PKGS_DIRECT=1 environment variable, or
 //   - Set git config: git config --global pkgs.direct true
-func NewClient(opts ...Option) (Client, error) {
+func NewClient(opts ...Option) (Client, error) { //nolint:ireturn // returns different concrete types based on config
 	o := buildOptions(opts)
 	if directMode() {
 		return newRegistriesClient(o.userAgent), nil

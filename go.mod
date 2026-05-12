@@ -5,7 +5,7 @@ go 1.25.6
 require (
 	github.com/ecosyste-ms/ecosystems-go v0.1.1
 	github.com/git-pkgs/purl v0.1.12
-	github.com/git-pkgs/registries v0.5.1
+	github.com/git-pkgs/registries v0.6.0
 	github.com/git-pkgs/vers v0.2.5
 )
 

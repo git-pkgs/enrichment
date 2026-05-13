@@ -7,6 +7,7 @@ import (
 	"github.com/git-pkgs/purl"
 	"github.com/git-pkgs/registries"
 	_ "github.com/git-pkgs/registries/all"
+	"github.com/git-pkgs/registries/client"
 	"github.com/git-pkgs/vers"
 )
 
@@ -21,7 +22,10 @@ func NewRegistriesClient() *RegistriesClient {
 }
 
 func newRegistriesClient(userAgent string) *RegistriesClient {
-	c := registries.DefaultClient()
+	// PURLs may carry an attacker-supplied repository_url qualifier that
+	// NewFromPURL/BulkFetchPackages will fetch from; gate the client's
+	// transport so loopback/RFC1918/link-local targets are refused.
+	c := registries.NewClient(client.WithSafeHTTP())
 	c.UserAgent = userAgent
 	return &RegistriesClient{client: c}
 }

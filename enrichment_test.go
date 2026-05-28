@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
+
+	"github.com/ecosyste-ms/ecosystems-go/packages"
 )
 
 const testVersionLodash = "4.17.21"
@@ -124,6 +127,66 @@ func TestAdvisoryMapping(t *testing.T) {
 	}
 	if len(a.Identifiers) != 2 || a.Identifiers[0] != "CVE-2024-1234" {
 		t.Errorf("Identifiers = %v, want [CVE-2024-1234 GHSA-xxxx]", a.Identifiers)
+	}
+}
+
+func TestConvertMaintainers(t *testing.T) {
+	login := "alice"
+	name := "Alice Example"
+	email := "alice@example.com"
+	htmlURL := "https://www.npmjs.com/~alice"
+	role := "owner"
+
+	t.Run("populated", func(t *testing.T) {
+		got := convertMaintainers([]packages.Maintainer{
+			{Login: &login, Name: &name, Email: &email, HtmlUrl: &htmlURL, Role: &role},
+			{Login: &login},
+		})
+		want := []Maintainer{
+			{Login: "alice", Name: "Alice Example", Email: "alice@example.com", URL: "https://www.npmjs.com/~alice", Role: "owner"},
+			{Login: "alice"},
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("convertMaintainers() = %+v, want %+v", got, want)
+		}
+	})
+
+	t.Run("nil fields", func(t *testing.T) {
+		got := convertMaintainers([]packages.Maintainer{{}})
+		if len(got) != 1 || got[0] != (Maintainer{}) {
+			t.Errorf("convertMaintainers([{}]) = %+v, want [{}]", got)
+		}
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		if got := convertMaintainers(nil); got != nil {
+			t.Errorf("convertMaintainers(nil) = %v, want nil", got)
+		}
+		if got := convertMaintainers([]packages.Maintainer{}); got != nil {
+			t.Errorf("convertMaintainers(empty) = %v, want nil", got)
+		}
+	})
+}
+
+func TestPackageInfoFundingAndMaintainers(t *testing.T) {
+	info := &PackageInfo{
+		FundingLinks: []string{"https://github.com/sponsors/alice", "https://opencollective.com/foo"},
+		Maintainers: []Maintainer{
+			{Login: "alice", Role: "owner"},
+		},
+	}
+
+	if len(info.FundingLinks) != 2 {
+		t.Errorf("len(FundingLinks) = %d, want 2", len(info.FundingLinks))
+	}
+	if info.FundingLinks[0] != "https://github.com/sponsors/alice" {
+		t.Errorf("FundingLinks[0] = %q", info.FundingLinks[0])
+	}
+	if len(info.Maintainers) != 1 {
+		t.Fatalf("len(Maintainers) = %d, want 1", len(info.Maintainers))
+	}
+	if info.Maintainers[0].Login != "alice" || info.Maintainers[0].Role != "owner" {
+		t.Errorf("Maintainers[0] = %+v", info.Maintainers[0])
 	}
 }
 

@@ -73,6 +73,8 @@ func (c *EcosystemsClient) BulkLookup(ctx context.Context, purls []string) (map[
 		info.DependentReposCount = pkg.DependentReposCount
 
 		info.Advisories = convertAdvisories(pkg.Advisories)
+		info.FundingLinks = pkg.FundingLinks
+		info.Maintainers = convertMaintainers(pkg.Maintainers)
 
 		result[purlStr] = info
 	}
@@ -153,6 +155,33 @@ func (c *EcosystemsClient) GetVersion(ctx context.Context, purlStr string) (*Ver
 		info.Integrity = *v.Integrity
 	}
 	return info, nil
+}
+
+func convertMaintainers(maintainers []packages.Maintainer) []Maintainer {
+	if len(maintainers) == 0 {
+		return nil
+	}
+	result := make([]Maintainer, 0, len(maintainers))
+	for _, m := range maintainers {
+		out := Maintainer{}
+		if m.Login != nil {
+			out.Login = *m.Login
+		}
+		if m.Name != nil {
+			out.Name = *m.Name
+		}
+		if m.Email != nil {
+			out.Email = *m.Email
+		}
+		if m.HtmlUrl != nil {
+			out.URL = *m.HtmlUrl
+		}
+		if m.Role != nil {
+			out.Role = *m.Role
+		}
+		result = append(result, out)
+	}
+	return result
 }
 
 func convertAdvisories(advisories []packages.Advisory) []Advisory {

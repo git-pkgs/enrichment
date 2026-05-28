@@ -43,6 +43,19 @@ type PackageInfo struct {
 
 	// Security advisories (ecosyste.ms only)
 	Advisories []Advisory
+
+	// Funding and maintainers (ecosyste.ms only)
+	FundingLinks []string
+	Maintainers  []Maintainer
+}
+
+// Maintainer is a person or account that maintains a package on its registry.
+type Maintainer struct {
+	Login string
+	Name  string
+	Email string
+	URL   string
+	Role  string
 }
 
 // Advisory is a security advisory affecting a package.

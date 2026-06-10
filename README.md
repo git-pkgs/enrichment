@@ -39,6 +39,20 @@ reg := enrichment.NewRegistriesClient()      // direct registry queries only
 dep := enrichment.NewDepsDevClient()         // deps.dev API only
 ```
 
+## Vulnerabilities, Licenses, and Versions
+
+```go
+vulns, err := enrichment.CheckVulnerabilities(ctx, "npm", "lodash", "4.17.20")
+for _, vuln := range vulns {
+    fmt.Printf("%s: %s fixed in %s\n", vuln.ID, vuln.Severity, vuln.FixedVersion)
+}
+
+category := enrichment.CategorizeLicense("MIT OR Apache-2.0") // permissive
+outdated := enrichment.IsOutdated("1.0.0", "1.2.0")           // true
+```
+
+Vulnerability checks use OSV by default. License categorization and version comparison are local helpers, so they continue to work in direct/private registry environments.
+
 ## Scorecard
 
 The `scorecard` sub-package queries the [OpenSSF Scorecard](https://securityscorecards.dev) API for repository-level security scores.

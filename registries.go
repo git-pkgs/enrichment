@@ -133,6 +133,7 @@ func (c *RegistriesClient) GetVersions(ctx context.Context, purlStr string) ([]V
 			PublishedAt: v.PublishedAt,
 			Integrity:   v.Integrity,
 			License:     v.Licenses,
+			Yanked:      v.Status == registries.StatusYanked,
 		}
 		result = append(result, info)
 	}
@@ -153,6 +154,7 @@ func (c *RegistriesClient) GetVersion(ctx context.Context, purlStr string) (*Ver
 		PublishedAt: v.PublishedAt,
 		Integrity:   v.Integrity,
 		License:     v.Licenses,
+		Yanked:      v.Status == registries.StatusYanked,
 	}, nil
 }
 

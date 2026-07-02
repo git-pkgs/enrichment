@@ -61,7 +61,7 @@ type Maintainer struct {
 // Advisory is a security advisory affecting a package.
 type Advisory struct {
 	Title       string
-	Severity    string  // e.g. "critical", "high", "medium", "low"
+	Severity    string // e.g. "critical", "high", "medium", "low"
 	CVSSScore   float32
 	URL         string
 	Identifiers []string // CVE IDs and other identifiers
@@ -73,4 +73,5 @@ type VersionInfo struct {
 	PublishedAt time.Time
 	Integrity   string
 	License     string
+	Yanked      bool
 }

@@ -428,7 +428,7 @@ func TestNewEcosystemsClient(t *testing.T) {
 	}
 }
 
-func TestEcosystemsGetVersionIncludesLicense(t *testing.T) {
+func TestEcosystemsClientGetVersionIncludesLicense(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/registries/npmjs.org/packages/ua-parser-js/versions/1.0.41" {
 			t.Errorf("path = %q, want version endpoint", r.URL.Path)
@@ -447,6 +447,9 @@ func TestEcosystemsGetVersionIncludesLicense(t *testing.T) {
 	version, err := client.GetVersion(context.Background(), "pkg:npm/ua-parser-js@1.0.41")
 	if err != nil {
 		t.Fatalf("GetVersion() error = %v", err)
+	}
+	if version == nil {
+		t.Fatal("GetVersion() returned nil")
 	}
 	if version.License != "MIT" {
 		t.Errorf("License = %q, want %q", version.License, "MIT")

@@ -428,6 +428,31 @@ func TestNewEcosystemsClient(t *testing.T) {
 	}
 }
 
+func TestEcosystemsGetVersionIncludesLicense(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/registries/npmjs.org/packages/ua-parser-js/versions/1.0.41" {
+			t.Errorf("path = %q, want version endpoint", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"number":"1.0.41","licenses":"MIT"}`))
+	}))
+	defer srv.Close()
+
+	ecosystemsClient, err := ecosystems.NewClient("test", ecosystems.WithPackagesServer(srv.URL))
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	client := &EcosystemsClient{client: ecosystemsClient}
+
+	version, err := client.GetVersion(context.Background(), "pkg:npm/ua-parser-js@1.0.41")
+	if err != nil {
+		t.Fatalf("GetVersion() error = %v", err)
+	}
+	if version.License != "MIT" {
+		t.Errorf("License = %q, want %q", version.License, "MIT")
+	}
+}
+
 func TestNewRegistriesClient(t *testing.T) {
 	client := NewRegistriesClient()
 	if client == nil {

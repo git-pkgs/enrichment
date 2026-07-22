@@ -167,6 +167,9 @@ func (c *EcosystemsClient) GetVersion(ctx context.Context, purlStr string) (*Ver
 	if v.Integrity != nil {
 		info.Integrity = *v.Integrity
 	}
+	if v.Licenses != nil {
+		info.License = *v.Licenses
+	}
 	return info, nil
 }
 

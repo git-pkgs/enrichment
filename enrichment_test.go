@@ -428,13 +428,18 @@ func TestNewEcosystemsClient(t *testing.T) {
 	}
 }
 
-func TestEcosystemsClientGetVersionIncludesLicense(t *testing.T) {
+func TestEcosystemsClientGetVersionIncludesMetadata(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/registries/npmjs.org/packages/ua-parser-js/versions/1.0.41" {
 			t.Errorf("path = %q, want version endpoint", r.URL.Path)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"number":"1.0.41","licenses":"MIT"}`))
+		_, _ = w.Write([]byte(`{
+			"number":"1.0.41",
+			"licenses":"MIT",
+			"status":"retracted",
+			"metadata":{"reason":"security issue"}
+		}`))
 	}))
 	defer srv.Close()
 
@@ -453,6 +458,34 @@ func TestEcosystemsClientGetVersionIncludesLicense(t *testing.T) {
 	}
 	if version.License != "MIT" {
 		t.Errorf("License = %q, want %q", version.License, "MIT")
+	}
+	if version.Status != "retracted" {
+		t.Errorf("Status = %q, want %q", version.Status, "retracted")
+	}
+	if version.Yanked {
+		t.Error("Yanked = true, want false for retracted version")
+	}
+	if version.Metadata["reason"] != "security issue" {
+		t.Errorf("Metadata = %#v, want retraction reason", version.Metadata)
+	}
+}
+
+func TestVersionInfoFromEcosystemsIncludesYankedStatus(t *testing.T) {
+	status := "yanked"
+	integrity := "sha256-example"
+	license := "MIT"
+	metadata := map[string]any{"reason": "bad release"}
+
+	got := versionInfoFromEcosystems("1.2.3", nil, &integrity, &license, &status, &metadata)
+
+	if got.Number != "1.2.3" || got.Integrity != integrity || got.License != license {
+		t.Fatalf("version metadata = %+v", got)
+	}
+	if got.Status != "yanked" || !got.Yanked {
+		t.Fatalf("status metadata = %+v, want yanked", got)
+	}
+	if got.Metadata["reason"] != "bad release" {
+		t.Fatalf("Metadata = %#v, want reason", got.Metadata)
 	}
 }
 

@@ -137,11 +137,14 @@ func (c *EcosystemsClient) GetVersions(ctx context.Context, purlStr string) ([]V
 
 	result := make([]VersionInfo, 0, len(versions))
 	for _, v := range versions {
-		info := VersionInfo{Number: v.Number}
-		if v.PublishedAt != nil {
-			info.PublishedAt, _ = time.Parse(time.RFC3339, *v.PublishedAt)
-		}
-		result = append(result, info)
+		result = append(result, versionInfoFromEcosystems(
+			v.Number,
+			v.PublishedAt,
+			v.Integrity,
+			v.Licenses,
+			v.Status,
+			v.Metadata,
+		))
 	}
 	return result, nil
 }
@@ -160,17 +163,40 @@ func (c *EcosystemsClient) GetVersion(ctx context.Context, purlStr string) (*Ver
 		return nil, nil
 	}
 
-	info := &VersionInfo{Number: v.Number}
-	if v.PublishedAt != nil {
-		info.PublishedAt, _ = time.Parse(time.RFC3339, *v.PublishedAt)
+	info := versionInfoFromEcosystems(
+		v.Number,
+		v.PublishedAt,
+		v.Integrity,
+		v.Licenses,
+		v.Status,
+		v.Metadata,
+	)
+	return &info, nil
+}
+
+func versionInfoFromEcosystems(
+	number string,
+	publishedAt, integrity, license, status *string,
+	metadata *map[string]any,
+) VersionInfo {
+	info := VersionInfo{Number: number}
+	if publishedAt != nil {
+		info.PublishedAt, _ = time.Parse(time.RFC3339, *publishedAt)
 	}
-	if v.Integrity != nil {
-		info.Integrity = *v.Integrity
+	if integrity != nil {
+		info.Integrity = *integrity
 	}
-	if v.Licenses != nil {
-		info.License = *v.Licenses
+	if license != nil {
+		info.License = *license
 	}
-	return info, nil
+	if status != nil {
+		info.Status = *status
+		info.Yanked = info.Status == string(registries.StatusYanked)
+	}
+	if metadata != nil {
+		info.Metadata = *metadata
+	}
+	return info
 }
 
 // GetDependentsByRepositoryURL finds packages published from repositoryURL and

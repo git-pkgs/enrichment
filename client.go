@@ -94,5 +94,7 @@ type VersionInfo struct {
 	PublishedAt time.Time
 	Integrity   string
 	License     string
-	Yanked      bool
+	Status      string         // "", "yanked", "deprecated", or "retracted"
+	Yanked      bool           // true when Status is "yanked"; retained for compatibility
+	Metadata    map[string]any // registry-specific version metadata
 }

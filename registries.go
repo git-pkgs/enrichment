@@ -139,14 +139,7 @@ func (c *RegistriesClient) GetVersions(ctx context.Context, purlStr string) ([]V
 
 	result := make([]VersionInfo, 0, len(versions))
 	for _, v := range versions {
-		info := VersionInfo{
-			Number:      v.Number,
-			PublishedAt: v.PublishedAt,
-			Integrity:   v.Integrity,
-			License:     v.Licenses,
-			Yanked:      v.Status == registries.StatusYanked,
-		}
-		result = append(result, info)
+		result = append(result, versionInfoFromRegistry(v))
 	}
 	return result, nil
 }
@@ -160,13 +153,20 @@ func (c *RegistriesClient) GetVersion(ctx context.Context, purlStr string) (*Ver
 		return nil, nil
 	}
 
-	return &VersionInfo{
+	info := versionInfoFromRegistry(*v)
+	return &info, nil
+}
+
+func versionInfoFromRegistry(v registries.Version) VersionInfo {
+	return VersionInfo{
 		Number:      v.Number,
 		PublishedAt: v.PublishedAt,
 		Integrity:   v.Integrity,
 		License:     v.Licenses,
+		Status:      string(v.Status),
 		Yanked:      v.Status == registries.StatusYanked,
-	}, nil
+		Metadata:    v.Metadata,
+	}
 }
 
 // extractRegistryURL extracts the registry URL from a PURL qualifier or returns the default.

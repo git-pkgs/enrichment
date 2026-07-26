@@ -3,9 +3,11 @@ package enrichment
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/ecosyste-ms/ecosystems-go"
@@ -766,5 +768,196 @@ func TestDepsDevBulkLookup(t *testing.T) {
 	}
 	if info.Source != "depsdev" {
 		t.Errorf("Source = %q, want %q", info.Source, "depsdev")
+	}
+}
+
+func TestDepsDevBulkLookupSkipsInvalidAndUnsupportedPURLs(t *testing.T) {
+	client := &DepsDevClient{
+		baseURL:    "http://127.0.0.1",
+		httpClient: http.DefaultClient,
+	}
+
+	result, err := client.BulkLookup(context.Background(), []string{
+		"not a purl",
+		"pkg:unsupported/name",
+	})
+	if err != nil {
+		t.Fatalf("BulkLookup() error: %v", err)
+	}
+	if len(result) != 0 {
+		t.Fatalf("BulkLookup() returned %d results, want 0", len(result))
+	}
+}
+
+func TestDepsDevBulkLookupReturnsContextError(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	client := NewDepsDevClient()
+	_, err := client.BulkLookup(ctx, []string{"pkg:npm/lodash"})
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("BulkLookup() error = %v, want context.Canceled", err)
+	}
+}
+
+func TestDepsDevBulkLookupReturnsContextErrorForEmptyBatch(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	client := NewDepsDevClient()
+	_, err := client.BulkLookup(ctx, nil)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("BulkLookup() error = %v, want context.Canceled", err)
+	}
+}
+
+func TestDepsDevBulkLookupReturnsPackageError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		http.Error(w, "deps.dev unavailable", http.StatusBadGateway)
+	}))
+	defer srv.Close()
+
+	client := &DepsDevClient{
+		baseURL:    srv.URL,
+		httpClient: srv.Client(),
+	}
+
+	_, err := client.BulkLookup(context.Background(), []string{"pkg:npm/lodash"})
+	if err == nil {
+		t.Fatal("BulkLookup() error = nil, want error")
+	}
+}
+
+func TestDepsDevBulkLookupSkipsPackageNotFound(t *testing.T) {
+	srv := httptest.NewServer(http.NotFoundHandler())
+	defer srv.Close()
+
+	client := &DepsDevClient{
+		baseURL:    srv.URL,
+		httpClient: srv.Client(),
+	}
+
+	result, err := client.BulkLookup(context.Background(), []string{"pkg:npm/missing"})
+	if err != nil {
+		t.Fatalf("BulkLookup() error: %v", err)
+	}
+	if len(result) != 0 {
+		t.Fatalf("BulkLookup() returned %d results, want 0", len(result))
+	}
+}
+
+func TestDepsDevGetVersionsReturnsNotFoundWithStatus(t *testing.T) {
+	srv := httptest.NewServer(http.NotFoundHandler())
+	defer srv.Close()
+
+	client := &DepsDevClient{
+		baseURL:    srv.URL,
+		httpClient: srv.Client(),
+	}
+
+	_, err := client.GetVersions(context.Background(), "pkg:npm/missing")
+	if !errors.Is(err, errDepsDevNotFound) {
+		t.Fatalf("GetVersions() error = %v, want errDepsDevNotFound", err)
+	}
+	if !strings.Contains(err.Error(), "404 Not Found") {
+		t.Fatalf("GetVersions() error = %q, want HTTP status", err)
+	}
+}
+
+func TestDepsDevBulkLookupReturnsVersionError(t *testing.T) {
+	callCount := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		callCount++
+		if callCount == 1 {
+			resp := depsdevPackageResponse{
+				Versions: []depsdevVersion{
+					{
+						VersionKey: struct {
+							System  string `json:"system"`
+							Name    string `json:"name"`
+							Version string `json:"version"`
+						}{System: "NPM", Name: "lodash", Version: testVersionLodash},
+						IsDefault: true,
+					},
+				},
+			}
+			_ = json.NewEncoder(w).Encode(resp)
+			return
+		}
+		http.Error(w, "version unavailable", http.StatusBadGateway)
+	}))
+	defer srv.Close()
+
+	client := &DepsDevClient{
+		baseURL:    srv.URL,
+		httpClient: srv.Client(),
+	}
+
+	_, err := client.BulkLookup(context.Background(), []string{"pkg:npm/lodash"})
+	if err == nil {
+		t.Fatal("BulkLookup() error = nil, want error")
+	}
+}
+
+func TestDepsDevBulkLookupSkipsVersionNotFound(t *testing.T) {
+	callCount := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		callCount++
+		if callCount == 1 {
+			resp := depsdevPackageResponse{
+				Versions: []depsdevVersion{
+					{
+						VersionKey: struct {
+							System  string `json:"system"`
+							Name    string `json:"name"`
+							Version string `json:"version"`
+						}{System: "NPM", Name: "missing-version", Version: testVersionLodash},
+						IsDefault: true,
+					},
+				},
+			}
+			_ = json.NewEncoder(w).Encode(resp)
+			return
+		}
+		http.NotFound(w, nil)
+	}))
+	defer srv.Close()
+
+	client := &DepsDevClient{
+		baseURL:    srv.URL,
+		httpClient: srv.Client(),
+	}
+
+	result, err := client.BulkLookup(context.Background(), []string{"pkg:npm/missing-version"})
+	if err != nil {
+		t.Fatalf("BulkLookup() error: %v", err)
+	}
+	info, ok := result["pkg:npm/missing-version"]
+	if !ok {
+		t.Fatal("expected pkg:npm/missing-version in result")
+	}
+	if info.LatestVersion != testVersionLodash {
+		t.Errorf("LatestVersion = %q, want %q", info.LatestVersion, testVersionLodash)
+	}
+	if info.License != "" {
+		t.Errorf("License = %q, want empty", info.License)
+	}
+}
+
+func TestDepsDevGetVersionReturnsNotFoundWithStatus(t *testing.T) {
+	srv := httptest.NewServer(http.NotFoundHandler())
+	defer srv.Close()
+
+	client := &DepsDevClient{
+		baseURL:    srv.URL,
+		httpClient: srv.Client(),
+	}
+
+	_, err := client.GetVersion(context.Background(), "pkg:npm/missing@1.0.0")
+	if !errors.Is(err, errDepsDevNotFound) {
+		t.Fatalf("GetVersion() error = %v, want errDepsDevNotFound", err)
+	}
+	if !strings.Contains(err.Error(), "404 Not Found") {
+		t.Fatalf("GetVersion() error = %q, want HTTP status", err)
 	}
 }

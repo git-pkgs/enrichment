@@ -3,6 +3,7 @@ package enrichment
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,6 +14,8 @@ import (
 )
 
 const defaultHTTPTimeout = 30 * time.Second
+
+var errDepsDevNotFound = errors.New("deps.dev: not found")
 
 // DepsDevClient queries the deps.dev v3 REST API.
 type DepsDevClient struct {
@@ -37,9 +40,17 @@ func newDepsDevClient(userAgent string) *DepsDevClient {
 }
 
 func (c *DepsDevClient) BulkLookup(ctx context.Context, purls []string) (map[string]*PackageInfo, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
 	result := make(map[string]*PackageInfo, len(purls))
 
 	for _, purlStr := range purls {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+
 		p, err := purl.Parse(purlStr)
 		if err != nil {
 			continue
@@ -53,7 +64,13 @@ func (c *DepsDevClient) BulkLookup(ctx context.Context, purls []string) (map[str
 		name := p.FullName()
 		resp, err := c.getPackage(ctx, system, name)
 		if err != nil {
-			continue
+			if errors.Is(err, errDepsDevNotFound) {
+				continue
+			}
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				return nil, ctxErr
+			}
+			return nil, err
 		}
 
 		info := &PackageInfo{
@@ -72,7 +89,14 @@ func (c *DepsDevClient) BulkLookup(ctx context.Context, purls []string) (map[str
 		// Fetch version details for the latest to get license and links
 		if info.LatestVersion != "" {
 			vResp, err := c.getVersion(ctx, system, name, info.LatestVersion)
-			if err == nil {
+			if err != nil {
+				if !errors.Is(err, errDepsDevNotFound) {
+					if ctxErr := ctx.Err(); ctxErr != nil {
+						return nil, ctxErr
+					}
+					return nil, err
+				}
+			} else {
 				if len(vResp.Licenses) > 0 {
 					info.License = strings.Join(vResp.Licenses, " AND ")
 				}
@@ -201,6 +225,9 @@ func (c *DepsDevClient) getPackage(ctx context.Context, system, name string) (*d
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode == http.StatusNotFound {
+			return nil, fmt.Errorf("deps.dev: %s: %w", resp.Status, errDepsDevNotFound)
+		}
 		return nil, fmt.Errorf("deps.dev: %s", resp.Status)
 	}
 
@@ -228,6 +255,9 @@ func (c *DepsDevClient) getVersion(ctx context.Context, system, name, version st
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode == http.StatusNotFound {
+			return nil, fmt.Errorf("deps.dev: %s: %w", resp.Status, errDepsDevNotFound)
+		}
 		return nil, fmt.Errorf("deps.dev: %s", resp.Status)
 	}
 
@@ -237,4 +267,3 @@ func (c *DepsDevClient) getVersion(ctx context.Context, system, name, version st
 	}
 	return &result, nil
 }
-

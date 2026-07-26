@@ -9,7 +9,15 @@ import (
 	"github.com/ecosyste-ms/ecosystems-go"
 	"github.com/ecosyste-ms/ecosystems-go/packages"
 	"github.com/git-pkgs/registries"
+	"github.com/oapi-codegen/nullable"
 )
+
+// nullableValue returns the underlying value of n, or the zero value of T if n
+// is null or unspecified.
+func nullableValue[T any](n nullable.Nullable[T]) T {
+	v, _ := n.Get()
+	return v
+}
 
 // EcosystemsClient wraps the ecosyste.ms API client.
 type EcosystemsClient struct {
@@ -58,30 +66,20 @@ func (c *EcosystemsClient) BulkLookup(ctx context.Context, purls []string) (map[
 			RegistryURL: registries.DefaultURL(pkg.Ecosystem),
 			Source:      "ecosystems",
 		}
-		if pkg.LatestReleaseNumber != nil {
-			info.LatestVersion = *pkg.LatestReleaseNumber
-		}
+		info.LatestVersion = nullableValue(pkg.LatestReleaseNumber)
 		if len(pkg.NormalizedLicenses) > 0 {
 			info.License = pkg.NormalizedLicenses[0]
-		} else if pkg.Licenses != nil && *pkg.Licenses != "" {
-			info.License = *pkg.Licenses
+		} else if licenses := nullableValue(pkg.Licenses); licenses != "" {
+			info.License = licenses
 		}
-		if pkg.Description != nil {
-			info.Description = *pkg.Description
-		}
-		if pkg.Homepage != nil {
-			info.Homepage = *pkg.Homepage
-		}
-		if pkg.RepositoryUrl != nil {
-			info.Repository = *pkg.RepositoryUrl
-		}
-		info.ChangelogFilename = extractChangelogFilename(pkg.RepoMetadata)
+		info.Description = nullableValue(pkg.Description)
+		info.Homepage = nullableValue(pkg.Homepage)
+		info.Repository = nullableValue(pkg.RepositoryURL)
+		info.ChangelogFilename = extractChangelogFilename(nullableValue(pkg.RepoMetadata))
 
 		// Popularity and usage
 		info.Downloads = pkg.Downloads
-		if pkg.DownloadsPeriod != nil {
-			info.DownloadsPeriod = *pkg.DownloadsPeriod
-		}
+		info.DownloadsPeriod = nullableValue(pkg.DownloadsPeriod)
 		info.DependentPackagesCount = pkg.DependentPackagesCount
 		info.DependentReposCount = pkg.DependentReposCount
 
@@ -96,12 +94,8 @@ func (c *EcosystemsClient) BulkLookup(ctx context.Context, purls []string) (map[
 
 // extractChangelogFilename digs into the ecosyste.ms RepoMetadata to find the
 // changelog filename at metadata.files.changelog.
-func extractChangelogFilename(repoMetadata *map[string]interface{}) string {
-	if repoMetadata == nil {
-		return ""
-	}
-	meta := *repoMetadata
-	metadataRaw, ok := meta["metadata"]
+func extractChangelogFilename(repoMetadata map[string]interface{}) string {
+	metadataRaw, ok := repoMetadata["metadata"]
 	if !ok {
 		return ""
 	}
@@ -176,26 +170,20 @@ func (c *EcosystemsClient) GetVersion(ctx context.Context, purlStr string) (*Ver
 
 func versionInfoFromEcosystems(
 	number string,
-	publishedAt, integrity, license, status *string,
-	metadata *map[string]any,
+	publishedAt, integrity, license, status nullable.Nullable[string],
+	metadata nullable.Nullable[map[string]any],
 ) VersionInfo {
 	info := VersionInfo{Number: number}
-	if publishedAt != nil {
-		info.PublishedAt, _ = time.Parse(time.RFC3339, *publishedAt)
+	if pub := nullableValue(publishedAt); pub != "" {
+		info.PublishedAt, _ = time.Parse(time.RFC3339, pub)
 	}
-	if integrity != nil {
-		info.Integrity = *integrity
-	}
-	if license != nil {
-		info.License = *license
-	}
-	if status != nil {
-		info.Status = *status
+	info.Integrity = nullableValue(integrity)
+	info.License = nullableValue(license)
+	if s, err := status.Get(); err == nil {
+		info.Status = s
 		info.Yanked = info.Status == string(registries.StatusYanked)
 	}
-	if metadata != nil {
-		info.Metadata = *metadata
-	}
+	info.Metadata = nullableValue(metadata)
 	return info
 }
 
@@ -235,7 +223,7 @@ func (c *EcosystemsClient) GetDependentsByRepositoryURL(ctx context.Context, rep
 		result = append(result, RepositoryDependents{
 			PackageName: pkg.Name,
 			Ecosystem:   pkg.Ecosystem,
-			PURL:        pkg.Purl,
+			PURL:        pkg.PURL,
 			Dependents:  out,
 		})
 	}
@@ -246,32 +234,25 @@ func convertDependentPackage(pkg packages.Package) DependentPackage {
 	out := DependentPackage{
 		Ecosystem:           pkg.Ecosystem,
 		Name:                pkg.Name,
-		PURL:                pkg.Purl,
+		PURL:                pkg.PURL,
 		Downloads:           pkg.Downloads,
 		DependentReposCount: pkg.DependentReposCount,
 	}
-	if pkg.RepositoryUrl != nil {
-		out.Repository = *pkg.RepositoryUrl
-	}
+	out.Repository = nullableValue(pkg.RepositoryURL)
 	if out.Repository == "" {
-		out.Repository = extractRepoHTMLURL(pkg.RepoMetadata)
+		out.Repository = extractRepoHTMLURL(nullableValue(pkg.RepoMetadata))
 	}
-	if pkg.RegistryUrl != nil {
-		out.RegistryURL = *pkg.RegistryUrl
+	if registryURL, err := pkg.RegistryURL.Get(); err == nil {
+		out.RegistryURL = registryURL
 	} else {
 		out.RegistryURL = registries.DefaultURL(pkg.Ecosystem)
 	}
-	if pkg.LatestReleaseNumber != nil {
-		out.LatestVersion = *pkg.LatestReleaseNumber
-	}
+	out.LatestVersion = nullableValue(pkg.LatestReleaseNumber)
 	return out
 }
 
-func extractRepoHTMLURL(repoMetadata *map[string]interface{}) string {
-	if repoMetadata == nil {
-		return ""
-	}
-	if htmlURL, ok := (*repoMetadata)["html_url"].(string); ok {
+func extractRepoHTMLURL(repoMetadata map[string]interface{}) string {
+	if htmlURL, ok := repoMetadata["html_url"].(string); ok {
 		return htmlURL
 	}
 	return ""
@@ -283,23 +264,13 @@ func convertMaintainers(maintainers []packages.Maintainer) []Maintainer {
 	}
 	result := make([]Maintainer, 0, len(maintainers))
 	for _, m := range maintainers {
-		out := Maintainer{}
-		if m.Login != nil {
-			out.Login = *m.Login
-		}
-		if m.Name != nil {
-			out.Name = *m.Name
-		}
-		if m.Email != nil {
-			out.Email = *m.Email
-		}
-		if m.HtmlUrl != nil {
-			out.URL = *m.HtmlUrl
-		}
-		if m.Role != nil {
-			out.Role = *m.Role
-		}
-		result = append(result, out)
+		result = append(result, Maintainer{
+			Login: nullableValue(m.Login),
+			Name:  nullableValue(m.Name),
+			Email: nullableValue(m.Email),
+			URL:   nullableValue(m.HTMLURL),
+			Role:  nullableValue(m.Role),
+		})
 	}
 	return result
 }
@@ -311,19 +282,15 @@ func convertAdvisories(advisories []packages.Advisory) []Advisory {
 	result := make([]Advisory, 0, len(advisories))
 	for _, adv := range advisories {
 		a := Advisory{
-			Identifiers: adv.Identifiers,
+			Title:     nullableValue(adv.Title),
+			Severity:  nullableValue(adv.Severity),
+			CVSSScore: nullableValue(adv.CVSSScore),
+			URL:       nullableValue(adv.URL),
 		}
-		if adv.Title != nil {
-			a.Title = *adv.Title
-		}
-		if adv.Severity != nil {
-			a.Severity = *adv.Severity
-		}
-		if adv.CvssScore != nil {
-			a.CVSSScore = *adv.CvssScore
-		}
-		if adv.Url != nil {
-			a.URL = *adv.Url
+		for _, id := range adv.Identifiers {
+			if v := nullableValue(id); v != "" {
+				a.Identifiers = append(a.Identifiers, v)
+			}
 		}
 		result = append(result, a)
 	}

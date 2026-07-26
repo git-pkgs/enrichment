@@ -9,6 +9,7 @@ require (
 	github.com/git-pkgs/spdx v0.1.4
 	github.com/git-pkgs/vers v0.3.0
 	github.com/git-pkgs/vulns v0.2.1
+	github.com/oapi-codegen/nullable v1.1.0
 )
 
 require (
@@ -17,7 +18,6 @@ require (
 	github.com/git-pkgs/pom v0.1.5 // indirect
 	github.com/github/go-spdx/v2 v2.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/oapi-codegen/nullable v1.1.0 // indirect
 	github.com/oapi-codegen/runtime v1.6.0 // indirect
 	github.com/package-url/packageurl-go v0.1.6 // indirect
 	github.com/pandatix/go-cvss v0.6.2 // indirect

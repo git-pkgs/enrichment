@@ -10,6 +10,7 @@ import (
 
 	"github.com/ecosyste-ms/ecosystems-go"
 	"github.com/ecosyste-ms/ecosystems-go/packages"
+	"github.com/oapi-codegen/nullable"
 )
 
 const testVersionLodash = "4.17.21"
@@ -46,7 +47,7 @@ func TestExtractChangelogFilename(t *testing.T) {
 				},
 			},
 		}
-		got := extractChangelogFilename(&meta)
+		got := extractChangelogFilename(meta)
 		if got != "CHANGELOG.md" {
 			t.Errorf("got %q, want %q", got, "CHANGELOG.md")
 		}
@@ -61,7 +62,7 @@ func TestExtractChangelogFilename(t *testing.T) {
 
 	t.Run("missing metadata key", func(t *testing.T) {
 		meta := map[string]interface{}{"other": "value"}
-		got := extractChangelogFilename(&meta)
+		got := extractChangelogFilename(meta)
 		if got != "" {
 			t.Errorf("got %q, want empty", got)
 		}
@@ -71,7 +72,7 @@ func TestExtractChangelogFilename(t *testing.T) {
 		meta := map[string]interface{}{
 			"metadata": map[string]interface{}{"other": "value"},
 		}
-		got := extractChangelogFilename(&meta)
+		got := extractChangelogFilename(meta)
 		if got != "" {
 			t.Errorf("got %q, want empty", got)
 		}
@@ -79,7 +80,7 @@ func TestExtractChangelogFilename(t *testing.T) {
 
 	t.Run("wrong type for metadata", func(t *testing.T) {
 		meta := map[string]interface{}{"metadata": "not a map"}
-		got := extractChangelogFilename(&meta)
+		got := extractChangelogFilename(meta)
 		if got != "" {
 			t.Errorf("got %q, want empty", got)
 		}
@@ -93,7 +94,7 @@ func TestExtractChangelogFilename(t *testing.T) {
 				},
 			},
 		}
-		got := extractChangelogFilename(&meta)
+		got := extractChangelogFilename(meta)
 		if got != "" {
 			t.Errorf("got %q, want empty", got)
 		}
@@ -132,16 +133,16 @@ func TestAdvisoryMapping(t *testing.T) {
 }
 
 func TestConvertMaintainers(t *testing.T) {
-	login := "alice"
-	name := "Alice Example"
-	email := "alice@example.com"
-	htmlURL := "https://www.npmjs.com/~alice"
-	role := "owner"
+	login := nullable.NewNullableWithValue("alice")
+	name := nullable.NewNullableWithValue("Alice Example")
+	email := nullable.NewNullableWithValue("alice@example.com")
+	htmlURL := nullable.NewNullableWithValue("https://www.npmjs.com/~alice")
+	role := nullable.NewNullableWithValue("owner")
 
 	t.Run("populated", func(t *testing.T) {
 		got := convertMaintainers([]packages.Maintainer{
-			{Login: &login, Name: &name, Email: &email, HtmlUrl: &htmlURL, Role: &role},
-			{Login: &login},
+			{Login: login, Name: name, Email: email, HTMLURL: htmlURL, Role: role},
+			{Login: login},
 		})
 		want := []Maintainer{
 			{Login: "alice", Name: "Alice Example", Email: "alice@example.com", URL: "https://www.npmjs.com/~alice", Role: "owner"},
@@ -471,14 +472,14 @@ func TestEcosystemsClientGetVersionIncludesMetadata(t *testing.T) {
 }
 
 func TestVersionInfoFromEcosystemsIncludesYankedStatus(t *testing.T) {
-	status := "yanked"
-	integrity := "sha256-example"
-	license := "MIT"
-	metadata := map[string]any{"reason": "bad release"}
+	status := nullable.NewNullableWithValue("yanked")
+	integrity := nullable.NewNullableWithValue("sha256-example")
+	license := nullable.NewNullableWithValue("MIT")
+	metadata := nullable.NewNullableWithValue(map[string]any{"reason": "bad release"})
 
-	got := versionInfoFromEcosystems("1.2.3", nil, &integrity, &license, &status, &metadata)
+	got := versionInfoFromEcosystems("1.2.3", nil, integrity, license, status, metadata)
 
-	if got.Number != "1.2.3" || got.Integrity != integrity || got.License != license {
+	if got.Number != "1.2.3" || got.Integrity != "sha256-example" || got.License != "MIT" {
 		t.Fatalf("version metadata = %+v", got)
 	}
 	if got.Status != "yanked" || !got.Yanked {

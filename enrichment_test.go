@@ -400,6 +400,25 @@ func TestHasRepositoryURL(t *testing.T) {
 	}
 }
 
+func TestPURLType(t *testing.T) {
+	tests := []struct {
+		purl string
+		want string
+	}{
+		{"pkg:npm/lodash", "npm"},
+		{"not a purl", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.purl, func(t *testing.T) {
+			got := purlType(tt.purl)
+			if got != tt.want {
+				t.Errorf("purlType(%q) = %q, want %q", tt.purl, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestFindLatestVersion(t *testing.T) {
 	tests := []struct {
 		name     string

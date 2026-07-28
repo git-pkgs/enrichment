@@ -61,11 +61,7 @@ func (c *RegistriesClient) BulkLookup(ctx context.Context, purls []string) (map[
 				if err != nil || len(versions) == 0 {
 					return
 				}
-				p, err := purl.Parse(purlStr)
-				if err != nil {
-					return
-				}
-				latest := findLatestVersion(versions, p.Type)
+				latest := findLatestVersion(versions, purlType(purlStr))
 				mu.Lock()
 				latestVersions[purlStr] = latest
 				mu.Unlock()
@@ -80,11 +76,7 @@ func (c *RegistriesClient) BulkLookup(ctx context.Context, purls []string) (map[
 			continue
 		}
 
-		p, _ := purl.Parse(purlStr)
-		ecosystem := ""
-		if p != nil {
-			ecosystem = p.Type
-		}
+		ecosystem := purlType(purlStr)
 
 		info := &PackageInfo{
 			Ecosystem:     ecosystem,
@@ -114,6 +106,14 @@ func acquireSemaphore(ctx context.Context, sem chan<- struct{}) bool {
 	case <-ctx.Done():
 		return false
 	}
+}
+
+func purlType(purlStr string) string {
+	p, err := purl.Parse(purlStr)
+	if err != nil || p == nil {
+		return ""
+	}
+	return p.Type
 }
 
 // findLatestVersion returns the highest available version using ecosystem ordering.

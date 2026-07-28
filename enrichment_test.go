@@ -12,6 +12,7 @@ import (
 
 	"github.com/ecosyste-ms/ecosystems-go"
 	"github.com/ecosyste-ms/ecosystems-go/packages"
+	"github.com/git-pkgs/registries"
 	"github.com/oapi-codegen/nullable"
 )
 
@@ -401,20 +402,101 @@ func TestHasRepositoryURL(t *testing.T) {
 
 func TestFindLatestVersion(t *testing.T) {
 	tests := []struct {
+		name     string
 		versions []VersionInfo
+		scheme   string
 		want     string
 	}{
-		{nil, ""},
-		{[]VersionInfo{{Number: "1.0.0"}}, "1.0.0"},
-		{[]VersionInfo{{Number: "1.0.0"}, {Number: "2.0.0"}, {Number: "1.5.0"}}, "2.0.0"},
-		{[]VersionInfo{{Number: "3.0.0"}, {Number: "1.0.0"}}, "3.0.0"},
+		{
+			name: "empty",
+		},
+		{
+			name:     "single version",
+			versions: []VersionInfo{{Number: "1.0.0"}},
+			scheme:   "npm",
+			want:     "1.0.0",
+		},
+		{
+			name: "highest semver",
+			versions: []VersionInfo{
+				{Number: "1.0.0"},
+				{Number: "2.0.0"},
+				{Number: "1.5.0"},
+			},
+			scheme: "npm",
+			want:   "2.0.0",
+		},
+		{
+			name: "keeps initial latest",
+			versions: []VersionInfo{
+				{Number: "3.0.0"},
+				{Number: "1.0.0"},
+			},
+			scheme: "npm",
+			want:   "3.0.0",
+		},
+		{
+			name: "uses scheme ordering",
+			versions: []VersionInfo{
+				{Number: "1.0~rc1"},
+				{Number: "1.0"},
+			},
+			scheme: "deb",
+			want:   "1.0",
+		},
+		{
+			name: "skips yanked status",
+			versions: []VersionInfo{
+				{Number: "2.0.0", Status: string(registries.StatusYanked)},
+				{Number: "1.0.0"},
+			},
+			scheme: "npm",
+			want:   "1.0.0",
+		},
+		{
+			name: "skips deprecated status",
+			versions: []VersionInfo{
+				{Number: "2.0.0", Status: string(registries.StatusDeprecated)},
+				{Number: "1.0.0"},
+			},
+			scheme: "npm",
+			want:   "1.0.0",
+		},
+		{
+			name: "skips retracted status",
+			versions: []VersionInfo{
+				{Number: "2.0.0", Status: string(registries.StatusRetracted)},
+				{Number: "1.0.0"},
+			},
+			scheme: "npm",
+			want:   "1.0.0",
+		},
+		{
+			name: "skips yanked boolean",
+			versions: []VersionInfo{
+				{Number: "2.0.0", Yanked: true},
+				{Number: "1.0.0"},
+			},
+			scheme: "npm",
+			want:   "1.0.0",
+		},
+		{
+			name: "returns empty when all unavailable",
+			versions: []VersionInfo{
+				{Number: "2.0.0", Status: string(registries.StatusYanked)},
+				{Number: "1.0.0", Status: string(registries.StatusDeprecated)},
+			},
+			scheme: "npm",
+		},
 	}
 
 	for _, tt := range tests {
-		got := findLatestVersion(tt.versions)
-		if got != tt.want {
-			t.Errorf("findLatestVersion() = %q, want %q", got, tt.want)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			got := findLatestVersion(tt.versions, tt.scheme)
+			if got != tt.want {
+				t.Errorf("findLatestVersion() = %q, want %q", got, tt.want)
+			}
+		})
 	}
 }
 

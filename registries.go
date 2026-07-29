@@ -61,7 +61,7 @@ func (c *RegistriesClient) BulkLookup(ctx context.Context, purls []string) (map[
 				if err != nil || len(versions) == 0 {
 					return
 				}
-				latest := findLatestVersion(versions)
+				latest := findLatestVersion(versions, purlType(purlStr))
 				mu.Lock()
 				latestVersions[purlStr] = latest
 				mu.Unlock()
@@ -76,11 +76,7 @@ func (c *RegistriesClient) BulkLookup(ctx context.Context, purls []string) (map[
 			continue
 		}
 
-		p, _ := purl.Parse(purlStr)
-		ecosystem := ""
-		if p != nil {
-			ecosystem = p.Type
-		}
+		ecosystem := purlType(purlStr)
 
 		info := &PackageInfo{
 			Ecosystem:     ecosystem,
@@ -112,18 +108,39 @@ func acquireSemaphore(ctx context.Context, sem chan<- struct{}) bool {
 	}
 }
 
-// findLatestVersion returns the highest version from a list using semver comparison.
-func findLatestVersion(versions []VersionInfo) string {
-	if len(versions) == 0 {
+func purlType(purlStr string) string {
+	p, err := purl.Parse(purlStr)
+	if err != nil || p == nil {
 		return ""
 	}
-	latest := versions[0].Number
-	for _, v := range versions[1:] {
-		if vers.Compare(v.Number, latest) > 0 {
+	return p.Type
+}
+
+// findLatestVersion returns the highest available version using ecosystem ordering.
+func findLatestVersion(versions []VersionInfo, scheme string) string {
+	var latest string
+	for _, v := range versions {
+		if unavailableVersion(v) {
+			continue
+		}
+		if latest == "" || vers.CompareWithScheme(v.Number, latest, scheme) > 0 {
 			latest = v.Number
 		}
 	}
 	return latest
+}
+
+func unavailableVersion(v VersionInfo) bool {
+	if v.Yanked {
+		return true
+	}
+
+	switch v.Status {
+	case string(registries.StatusYanked), string(registries.StatusDeprecated), string(registries.StatusRetracted):
+		return true
+	default:
+		return false
+	}
 }
 
 func (c *RegistriesClient) GetVersions(ctx context.Context, purlStr string) ([]VersionInfo, error) {

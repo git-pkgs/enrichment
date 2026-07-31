@@ -9,7 +9,7 @@ require (
 	github.com/git-pkgs/spdx v0.1.4
 	github.com/git-pkgs/vers v0.3.0
 	github.com/git-pkgs/vulns v0.2.1
-	github.com/oapi-codegen/nullable v1.1.0
+	github.com/oapi-codegen/nullable v1.2.0
 )
 
 require (

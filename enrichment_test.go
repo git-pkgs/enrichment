@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ecosyste-ms/ecosystems-go"
 	"github.com/ecosyste-ms/ecosystems-go/packages"
@@ -260,7 +261,16 @@ func TestEcosystemsClientGetDependentsByRepositoryURL(t *testing.T) {
 					"dependent_repos_count":4,
 					"registry_url":"https://npmjs.org/app-b",
 					"latest_release_number":"2.0.0",
-					"repo_metadata":{"html_url":"https://github.com/acme/app-b"}
+					"repo_metadata":{
+						"html_url":"https://github.com/acme/app-b",
+						"fork":true,
+						"archived":true,
+						"mirror_url":"https://git.example.com/acme/app-b",
+						"source_name":"acme/app-b-source",
+						"pushed_at":"2026-07-09T12:34:56Z",
+						"stargazers_count":1234,
+						"language":"Go"
+					}
 				},
 				{
 					"name":"app-a",
@@ -313,6 +323,18 @@ func TestEcosystemsClientGetDependentsByRepositoryURL(t *testing.T) {
 		deps[1].RegistryURL != "https://npmjs.org/app-b" ||
 		deps[1].Downloads != 20 {
 		t.Fatalf("app-b = %+v", deps[1])
+	}
+	wantRepositoryMetadata := RepositoryMetadata{
+		Fork:            true,
+		Archived:        true,
+		MirrorURL:       "https://git.example.com/acme/app-b",
+		SourceName:      "acme/app-b-source",
+		PushedAt:        time.Date(2026, time.July, 9, 12, 34, 56, 0, time.UTC),
+		StargazersCount: 1234,
+		Language:        "Go",
+	}
+	if !reflect.DeepEqual(deps[1].RepositoryMetadata, wantRepositoryMetadata) {
+		t.Errorf("app-b repository metadata = %+v, want %+v", deps[1].RepositoryMetadata, wantRepositoryMetadata)
 	}
 }
 

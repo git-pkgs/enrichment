@@ -231,16 +231,18 @@ func (c *EcosystemsClient) GetDependentsByRepositoryURL(ctx context.Context, rep
 }
 
 func convertDependentPackage(pkg packages.Package) DependentPackage {
+	repoMetadata := nullableValue(pkg.RepoMetadata)
 	out := DependentPackage{
 		Ecosystem:           pkg.Ecosystem,
 		Name:                pkg.Name,
 		PURL:                pkg.PURL,
+		RepositoryMetadata:  convertRepositoryMetadata(repoMetadata),
 		Downloads:           pkg.Downloads,
 		DependentReposCount: pkg.DependentReposCount,
 	}
 	out.Repository = nullableValue(pkg.RepositoryURL)
 	if out.Repository == "" {
-		out.Repository = extractRepoHTMLURL(nullableValue(pkg.RepoMetadata))
+		out.Repository = extractRepoHTMLURL(repoMetadata)
 	}
 	if registryURL, err := pkg.RegistryURL.Get(); err == nil {
 		out.RegistryURL = registryURL
@@ -248,6 +250,22 @@ func convertDependentPackage(pkg packages.Package) DependentPackage {
 		out.RegistryURL = registries.DefaultURL(pkg.Ecosystem)
 	}
 	out.LatestVersion = nullableValue(pkg.LatestReleaseNumber)
+	return out
+}
+
+func convertRepositoryMetadata(metadata map[string]interface{}) RepositoryMetadata {
+	out := RepositoryMetadata{}
+	out.Fork, _ = metadata["fork"].(bool)
+	out.Archived, _ = metadata["archived"].(bool)
+	out.MirrorURL, _ = metadata["mirror_url"].(string)
+	out.SourceName, _ = metadata["source_name"].(string)
+	out.Language, _ = metadata["language"].(string)
+	if pushedAt, ok := metadata["pushed_at"].(string); ok {
+		out.PushedAt, _ = time.Parse(time.RFC3339, pushedAt)
+	}
+	if stargazersCount, ok := metadata["stargazers_count"].(float64); ok {
+		out.StargazersCount = int(stargazersCount)
+	}
 	return out
 }
 

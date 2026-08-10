@@ -64,10 +64,23 @@ type DependentPackage struct {
 	Name                string
 	PURL                string
 	Repository          string
+	RepositoryMetadata  RepositoryMetadata
 	RegistryURL         string
 	LatestVersion       string
 	Downloads           int
 	DependentReposCount int
+}
+
+// RepositoryMetadata contains repository details used to filter and rank
+// dependent packages.
+type RepositoryMetadata struct {
+	Fork            bool
+	Archived        bool
+	MirrorURL       string
+	SourceName      string
+	PushedAt        time.Time
+	StargazersCount int
+	Language        string
 }
 
 // Maintainer is a person or account that maintains a package on its registry.

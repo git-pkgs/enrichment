@@ -78,10 +78,29 @@ func NewClient(opts ...Option) (Client, error) { //nolint:ireturn // returns dif
 	return newHybridClient(o)
 }
 
-var (
-	directModeFallbackOnce   sync.Once
-	directModeFallbackResult bool
-)
+// directModeFallback caches the result of the git-config fallback used by
+// directMode. It is a type (rather than bare package vars) so tests can
+// construct an isolated instance and verify the caching behavior directly,
+// instead of depending on shared process-global state.
+type directModeFallback struct {
+	once   sync.Once
+	result bool
+}
+
+func (f *directModeFallback) get() bool {
+	f.once.Do(func() {
+		out, err := exec.Command("git", "config", "--get", "pkgs.direct").Output()
+		if err != nil {
+			return
+		}
+
+		val := strings.TrimSpace(string(out))
+		f.result = val == "true" || val == "1" || val == "yes"
+	})
+	return f.result
+}
+
+var globalDirectModeFallback directModeFallback
 
 // directMode checks if direct registry mode is enabled.
 // Environment variable takes precedence over git config; it is re-read on
@@ -91,15 +110,5 @@ func directMode() bool {
 	if v := os.Getenv("GIT_PKGS_DIRECT"); v != "" {
 		return v == "true" || v == "1" || v == "yes"
 	}
-
-	directModeFallbackOnce.Do(func() {
-		out, err := exec.Command("git", "config", "--get", "pkgs.direct").Output()
-		if err != nil {
-			return
-		}
-
-		val := strings.TrimSpace(string(out))
-		directModeFallbackResult = val == "true" || val == "1" || val == "yes"
-	})
-	return directModeFallbackResult
+	return globalDirectModeFallback.get()
 }

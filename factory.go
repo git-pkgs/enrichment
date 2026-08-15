@@ -78,18 +78,33 @@ func NewClient(opts ...Option) (Client, error) { //nolint:ireturn // returns dif
 	return newHybridClient(o)
 }
 
+// gitConfigDirect reads the pkgs.direct git config value.
+func gitConfigDirect() ([]byte, error) {
+	return exec.Command("git", "config", "--get", "pkgs.direct").Output()
+}
+
 // directModeFallback caches the result of the git-config fallback used by
 // directMode. It is a type (rather than bare package vars) so tests can
 // construct an isolated instance and verify the caching behavior directly,
 // instead of depending on shared process-global state.
 type directModeFallback struct {
+	// lookup reads the raw git config value. Nil means gitConfigDirect,
+	// so the zero value is usable. Tests inject a stub to avoid depending
+	// on a real git executable, which keeps them platform independent.
+	lookup func() ([]byte, error)
+
 	once   sync.Once
 	result bool
 }
 
 func (f *directModeFallback) get() bool {
 	f.once.Do(func() {
-		out, err := exec.Command("git", "config", "--get", "pkgs.direct").Output()
+		lookup := f.lookup
+		if lookup == nil {
+			lookup = gitConfigDirect
+		}
+
+		out, err := lookup()
 		if err != nil {
 			return
 		}

@@ -71,7 +71,7 @@ func (c *HybridClient) BulkLookup(ctx context.Context, purls []string) (map[stri
 		return nil, regErr
 	}
 
-	result := make(map[string]*PackageInfo)
+	result := make(map[string]*PackageInfo, len(ecoResults)+len(regResults))
 	for purlStr, info := range ecoResults {
 		result[purlStr] = info
 	}

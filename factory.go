@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 )
 
 const defaultUserAgent = "enrichment"
@@ -77,18 +78,28 @@ func NewClient(opts ...Option) (Client, error) { //nolint:ireturn // returns dif
 	return newHybridClient(o)
 }
 
+var (
+	directModeFallbackOnce   sync.Once
+	directModeFallbackResult bool
+)
+
 // directMode checks if direct registry mode is enabled.
-// Environment variable takes precedence over git config.
+// Environment variable takes precedence over git config; it is re-read on
+// every call so overrides remain dynamic. The git config fallback spawns a
+// subprocess, so its result is cached for the life of the process.
 func directMode() bool {
 	if v := os.Getenv("GIT_PKGS_DIRECT"); v != "" {
 		return v == "true" || v == "1" || v == "yes"
 	}
 
-	out, err := exec.Command("git", "config", "--get", "pkgs.direct").Output()
-	if err != nil {
-		return false
-	}
+	directModeFallbackOnce.Do(func() {
+		out, err := exec.Command("git", "config", "--get", "pkgs.direct").Output()
+		if err != nil {
+			return
+		}
 
-	val := strings.TrimSpace(string(out))
-	return val == "true" || val == "1" || val == "yes"
+		val := strings.TrimSpace(string(out))
+		directModeFallbackResult = val == "true" || val == "1" || val == "yes"
+	})
+	return directModeFallbackResult
 }

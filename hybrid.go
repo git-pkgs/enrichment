@@ -2,6 +2,7 @@ package enrichment
 
 import (
 	"context"
+	"sync"
 
 	"github.com/git-pkgs/purl"
 )
@@ -40,26 +41,42 @@ func (c *HybridClient) BulkLookup(ctx context.Context, purls []string) (map[stri
 		}
 	}
 
-	result := make(map[string]*PackageInfo)
+	var (
+		ecoResults, regResults map[string]*PackageInfo
+		ecoErr, regErr         error
+	)
 
-	if len(ecoPurls) > 0 {
-		ecoResults, err := c.ecosystems.BulkLookup(ctx, ecoPurls)
-		if err != nil {
-			return nil, err
-		}
-		for purlStr, info := range ecoResults {
-			result[purlStr] = info
-		}
+	if len(ecoPurls) > 0 && len(regPurls) > 0 {
+		var wg sync.WaitGroup
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			ecoResults, ecoErr = c.ecosystems.BulkLookup(ctx, ecoPurls)
+		}()
+		go func() {
+			defer wg.Done()
+			regResults, regErr = c.registries.BulkLookup(ctx, regPurls)
+		}()
+		wg.Wait()
+	} else if len(ecoPurls) > 0 {
+		ecoResults, ecoErr = c.ecosystems.BulkLookup(ctx, ecoPurls)
+	} else if len(regPurls) > 0 {
+		regResults, regErr = c.registries.BulkLookup(ctx, regPurls)
 	}
 
-	if len(regPurls) > 0 {
-		regResults, err := c.registries.BulkLookup(ctx, regPurls)
-		if err != nil {
-			return nil, err
-		}
-		for purlStr, info := range regResults {
-			result[purlStr] = info
-		}
+	if ecoErr != nil {
+		return nil, ecoErr
+	}
+	if regErr != nil {
+		return nil, regErr
+	}
+
+	result := make(map[string]*PackageInfo)
+	for purlStr, info := range ecoResults {
+		result[purlStr] = info
+	}
+	for purlStr, info := range regResults {
+		result[purlStr] = info
 	}
 
 	return result, nil

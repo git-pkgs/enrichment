@@ -7,11 +7,20 @@ import (
 	"github.com/git-pkgs/purl"
 )
 
+// hybridBackend is the subset of EcosystemsClient/RegistriesClient behavior
+// HybridClient depends on. The indirection lets tests inject fakes without
+// exercising real HTTP backends.
+type hybridBackend interface {
+	BulkLookup(ctx context.Context, purls []string) (map[string]*PackageInfo, error)
+	GetVersions(ctx context.Context, purlStr string) ([]VersionInfo, error)
+	GetVersion(ctx context.Context, purlStr string) (*VersionInfo, error)
+}
+
 // HybridClient routes requests based on PURL qualifiers.
 // PURLs with repository_url go to registries, others go to ecosyste.ms.
 type HybridClient struct {
-	ecosystems *EcosystemsClient
-	registries *RegistriesClient
+	ecosystems hybridBackend
+	registries hybridBackend
 }
 
 // NewHybridClient creates a client that routes based on PURL qualifiers.

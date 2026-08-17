@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/git-pkgs/registries"
+	registryclient "github.com/git-pkgs/registries/client"
 )
 
 func TestRegistriesClientBlocksLoopbackRepositoryURL(t *testing.T) {
@@ -32,29 +33,34 @@ func TestRegistriesClientBlocksLoopbackRepositoryURL(t *testing.T) {
 	}
 }
 
-func TestAcquireSemaphore(t *testing.T) {
-	sem := make(chan struct{}, 1)
+func TestRegistriesClientBulkLookupUsesSharedLatestPolicy(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+  "_id": "example",
+  "versions": {
+    "2.0.0": {"deprecated": "use the stable line"},
+    "1.5.0": {},
+    "1.0.0": {}
+  },
+  "time": {
+    "1.5.0": "2025-01-01T00:00:00Z",
+    "1.0.0": "2026-01-01T00:00:00Z"
+  }
+}`))
+	}))
+	defer srv.Close()
 
-	if !acquireSemaphore(context.Background(), sem) {
-		t.Fatal("acquireSemaphore() = false, want true")
+	httpClient := registries.NewClient(registryclient.WithHTTPClient(srv.Client()))
+	c := &RegistriesClient{client: httpClient}
+	purl := "pkg:npm/example?repository_url=" + url.QueryEscape(srv.URL)
+
+	result, err := c.BulkLookup(context.Background(), []string{purl})
+	if err != nil {
+		t.Fatalf("BulkLookup: %v", err)
 	}
-
-	select {
-	case <-sem:
-	default:
-		t.Fatal("semaphore was not acquired")
-	}
-}
-
-func TestAcquireSemaphoreReturnsFalseWhenContextCanceled(t *testing.T) {
-	sem := make(chan struct{}, 1)
-	sem <- struct{}{}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-
-	if acquireSemaphore(ctx, sem) {
-		t.Fatal("acquireSemaphore() = true, want false")
+	if result[purl] == nil || result[purl].LatestVersion != "1.0.0" {
+		t.Fatalf("BulkLookup() = %+v, want latest version 1.0.0", result[purl])
 	}
 }
 

@@ -2,13 +2,11 @@ package enrichment
 
 import (
 	"context"
-	"sync"
 
 	"github.com/git-pkgs/purl"
 	"github.com/git-pkgs/registries"
 	_ "github.com/git-pkgs/registries/all"
 	"github.com/git-pkgs/registries/client"
-	"github.com/git-pkgs/vers"
 )
 
 // RegistriesClient queries package registries directly.
@@ -33,7 +31,8 @@ func newRegistriesClient(userAgent string) *RegistriesClient {
 func (c *RegistriesClient) BulkLookup(ctx context.Context, purls []string) (map[string]*PackageInfo, error) {
 	packages := registries.BulkFetchPackages(ctx, purls, c.client)
 
-	// For packages without LatestVersion populated, fetch versions and compute it
+	// For packages without LatestVersion populated, use registries' shared
+	// latest-release policy.
 	var needLatest []string
 	for purlStr, pkg := range packages {
 		if pkg != nil && pkg.LatestVersion == "" {
@@ -41,34 +40,7 @@ func (c *RegistriesClient) BulkLookup(ctx context.Context, purls []string) (map[
 		}
 	}
 
-	latestVersions := make(map[string]string)
-	if len(needLatest) > 0 {
-		var mu sync.Mutex
-		var wg sync.WaitGroup
-		const maxConcurrency = 10
-		sem := make(chan struct{}, maxConcurrency)
-
-		for _, purlStr := range needLatest {
-			wg.Add(1)
-			go func(purlStr string) {
-				defer wg.Done()
-				if !acquireSemaphore(ctx, sem) {
-					return
-				}
-				defer func() { <-sem }()
-
-				versions, err := c.GetVersions(ctx, purlStr)
-				if err != nil || len(versions) == 0 {
-					return
-				}
-				latest := findLatestVersion(versions, purlType(purlStr))
-				mu.Lock()
-				latestVersions[purlStr] = latest
-				mu.Unlock()
-			}(purlStr)
-		}
-		wg.Wait()
-	}
+	latestVersions := registries.BulkFetchLatestVersions(ctx, needLatest, c.client)
 
 	result := make(map[string]*PackageInfo, len(packages))
 	for purlStr, pkg := range packages {
@@ -91,21 +63,14 @@ func (c *RegistriesClient) BulkLookup(ctx context.Context, purls []string) (map[
 		}
 
 		if info.LatestVersion == "" {
-			info.LatestVersion = latestVersions[purlStr]
+			if latest := latestVersions[purlStr]; latest != nil {
+				info.LatestVersion = latest.Number
+			}
 		}
 
 		result[purlStr] = info
 	}
 	return result, nil
-}
-
-func acquireSemaphore(ctx context.Context, sem chan<- struct{}) bool {
-	select {
-	case sem <- struct{}{}:
-		return true
-	case <-ctx.Done():
-		return false
-	}
 }
 
 func purlType(purlStr string) string {
@@ -114,33 +79,6 @@ func purlType(purlStr string) string {
 		return ""
 	}
 	return p.Type
-}
-
-// findLatestVersion returns the highest available version using ecosystem ordering.
-func findLatestVersion(versions []VersionInfo, scheme string) string {
-	var latest string
-	for _, v := range versions {
-		if unavailableVersion(v) {
-			continue
-		}
-		if latest == "" || vers.CompareWithScheme(v.Number, latest, scheme) > 0 {
-			latest = v.Number
-		}
-	}
-	return latest
-}
-
-func unavailableVersion(v VersionInfo) bool {
-	if v.Yanked {
-		return true
-	}
-
-	switch v.Status {
-	case string(registries.StatusYanked), string(registries.StatusDeprecated), string(registries.StatusRetracted):
-		return true
-	default:
-		return false
-	}
 }
 
 func (c *RegistriesClient) GetVersions(ctx context.Context, purlStr string) ([]VersionInfo, error) {

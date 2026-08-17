@@ -1,0 +1,22 @@
+{
+  "baseline": "v0.2.1",
+  "cost_usd": 4.95383625,
+  "ecosystem": "golang",
+  "notes": "breaks.json is empty so no history-derived tests were generated. source_interface_test.go imports github.com/git-pkgs/purl because *purl.PURL appears in the vulns.Source method signatures the target's fake implements; without it the interface method set cannot be pinned. Source.Query and Source.QueryBatch are exercised only through the interface assignment because calling them on the real *osv.Source would hit the network.",
+  "purl": "pkg:golang/github.com/git-pkgs/vulns",
+  "session_id": "cb5e558f-aa56-4fa2-8bd0-9df65e1b73d3",
+  "target": "enrichment",
+  "validate": [],
+  "verify": [
+    {
+      "version": "v0.2.1",
+      "pass": 8,
+      "fail": 0
+    },
+    {
+      "version": "v0.2.2",
+      "pass": 8,
+      "fail": 0
+    }
+  ]
+}

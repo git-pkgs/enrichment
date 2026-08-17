@@ -1,0 +1,21 @@
+{
+  "baseline": "v0.1.15",
+  "cost_usd": 4.6761335,
+  "ecosystem": "golang",
+  "notes": "The purl.PURL type-reference test asserts concrete field values on the stored elements rather than mere assignability so it is not a shape-only check. No standalone NormalizeEcosystem test was emitted because the target only relies on equality between two NormalizeEcosystem calls, which the SupportedEcosystems tests already exercise with the exact inputs the target passes. The breaks.json entry concerns the identity of the embedded packageurl.PackageURL type; the target no longer depends on that identity, so the break test pins the string-field contract the target now reads instead of importing packageurl-go, which would violate the hermetic import rule.",
+  "purl": "pkg:golang/github.com/git-pkgs/purl",
+  "session_id": "986caf78-83c0-47f5-af85-5022457967f7",
+  "target": "enrichment",
+  "verify": [
+    {
+      "version": "v0.1.15",
+      "pass": 0,
+      "fail": 0
+    },
+    {
+      "version": "v0.1.17",
+      "pass": 0,
+      "fail": 0
+    }
+  ]
+}

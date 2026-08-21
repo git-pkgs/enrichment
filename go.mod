@@ -8,7 +8,7 @@ require (
 	github.com/git-pkgs/registries v0.8.0
 	github.com/git-pkgs/spdx v0.3.0
 	github.com/git-pkgs/vers v0.5.0
-	github.com/git-pkgs/vulns v0.2.1
+	github.com/git-pkgs/vulns v0.2.2
 	github.com/oapi-codegen/nullable v1.2.0
 )
 

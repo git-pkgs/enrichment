@@ -9,7 +9,7 @@ require (
 	github.com/git-pkgs/purl v0.1.17
 	github.com/git-pkgs/registries v0.8.1
 	github.com/git-pkgs/spdx v0.3.1
-	github.com/git-pkgs/vers v0.6.0
+	github.com/git-pkgs/vers v0.7.0
 	github.com/git-pkgs/vulns v0.2.2
 	github.com/oapi-codegen/nullable v1.2.0
 )

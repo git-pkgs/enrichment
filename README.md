@@ -98,4 +98,4 @@ The `eol`, `lts`, `support`, and `extendedSupport` fields from the API can be ei
 
 ## License
 
-MIT
+[MIT](LICENSE).

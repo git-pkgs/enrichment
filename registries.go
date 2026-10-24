@@ -59,11 +59,20 @@ func (c *RegistriesClient) BulkLookup(ctx context.Context, purls []string) (map[
 }
 
 // GetPackage fetches metadata for one package. Unlike BulkLookup, it returns
-// the error when the registry can't be queried. LatestVersion follows the same
-// policy as BulkLookup; if only that second lookup fails, the package is
-// returned without it.
+// the registry's error: a missing package gives an error matching
+// registries.ErrNotFound, and a registry that can't be queried gives a
+// different one. It returns nil, nil when the registry reports no package
+// without an error.
+//
+// LatestVersion follows the same policy as BulkLookup. If only the version
+// lookup behind it fails, the package is returned without LatestVersion,
+// unless ctx is done, in which case ctx's error is returned.
 func (c *RegistriesClient) GetPackage(ctx context.Context, purlStr string) (*PackageInfo, error) {
-	pkg, err := registries.FetchPackageFromPURL(ctx, purlStr, c.client)
+	reg, name, _, err := registries.NewFromPURL(purlStr, c.client)
+	if err != nil {
+		return nil, err
+	}
+	pkg, err := reg.FetchPackage(ctx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +81,14 @@ func (c *RegistriesClient) GetPackage(ctx context.Context, purlStr string) (*Pac
 	}
 	info := packageInfoFromRegistry(purlStr, pkg)
 	if info.LatestVersion == "" {
-		if latest, err := registries.FetchLatestVersionFromPURL(ctx, purlStr, c.client); err == nil && latest != nil {
-			info.LatestVersion = latest.Number
+		versions, err := reg.FetchVersions(ctx, name)
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return nil, ctxErr
+		}
+		if err == nil {
+			if latest := registries.SelectLatestVersion(versions, reg.Ecosystem(), ""); latest != nil {
+				info.LatestVersion = latest.Number
+			}
 		}
 	}
 	return info, nil

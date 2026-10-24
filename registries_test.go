@@ -2,6 +2,7 @@ package enrichment
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -66,9 +67,15 @@ func TestRegistriesClientBulkLookupUsesSharedLatestPolicy(t *testing.T) {
 }
 
 func TestRegistriesClientGetPackage(t *testing.T) {
+	var requests atomic.Int32
+	var countExample atomic.Bool
+	countExample.Store(true)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/example":
+			if countExample.Load() {
+				requests.Add(1)
+			}
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{
   "_id": "example",
@@ -92,6 +99,7 @@ func TestRegistriesClientGetPackage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetPackage: %v", err)
 	}
+	countExample.Store(false)
 	bulk, err := c.BulkLookup(context.Background(), []string{example})
 	if err != nil {
 		t.Fatalf("BulkLookup: %v", err)
@@ -103,10 +111,25 @@ func TestRegistriesClientGetPackage(t *testing.T) {
 		t.Errorf("GetPackage() = %+v, BulkLookup() = %+v; want the same", info, bulk[example])
 	}
 
-	for _, name := range []string{"missing", "broken"} {
-		if info, err := c.GetPackage(context.Background(), "pkg:npm/"+name+repo); err == nil {
+	for name, wantNotFound := range map[string]bool{"missing": true, "broken": false} {
+		info, err := c.GetPackage(context.Background(), "pkg:npm/"+name+repo)
+		if err == nil {
 			t.Errorf("GetPackage(%s) = %+v, nil; want an error", name, info)
+			continue
 		}
+		if got := errors.Is(err, registries.ErrNotFound); got != wantNotFound {
+			t.Errorf("GetPackage(%s) error %v: errors.Is(ErrNotFound) = %v, want %v", name, err, got, wantNotFound)
+		}
+	}
+
+	if got := requests.Load(); got != 2 {
+		t.Errorf("registry requests for example = %d, want 2 (package and versions)", got)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if info, err := c.GetPackage(ctx, example); !errors.Is(err, context.Canceled) {
+		t.Errorf("GetPackage(canceled) = %+v, %v; want context.Canceled", info, err)
 	}
 }
 

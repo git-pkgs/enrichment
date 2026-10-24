@@ -47,32 +47,53 @@ func (c *RegistriesClient) BulkLookup(ctx context.Context, purls []string) (map[
 		if pkg == nil {
 			continue
 		}
-
-		ecosystem := purlType(purlStr)
-
-		info := &PackageInfo{
-			Ecosystem:     ecosystem,
-			Name:          pkg.Name,
-			LatestVersion: pkg.LatestVersion,
-			License:       pkg.Licenses,
-			Description:   pkg.Description,
-			Homepage:      pkg.Homepage,
-			Repository:    pkg.Repository,
-			RegistryURL:   extractRegistryURL(purlStr, ecosystem),
-			FundingLinks:  pkg.FundingLinks,
-			Maintainers:   maintainersFromRegistry(pkg.Maintainers),
-			Source:        "registries",
-		}
-
+		info := packageInfoFromRegistry(purlStr, pkg)
 		if info.LatestVersion == "" {
 			if latest := latestVersions[purlStr]; latest != nil {
 				info.LatestVersion = latest.Number
 			}
 		}
-
 		result[purlStr] = info
 	}
 	return result, nil
+}
+
+// GetPackage fetches metadata for one package. Unlike BulkLookup, it returns
+// the error when the registry can't be queried. LatestVersion follows the same
+// policy as BulkLookup; if only that second lookup fails, the package is
+// returned without it.
+func (c *RegistriesClient) GetPackage(ctx context.Context, purlStr string) (*PackageInfo, error) {
+	pkg, err := registries.FetchPackageFromPURL(ctx, purlStr, c.client)
+	if err != nil {
+		return nil, err
+	}
+	if pkg == nil {
+		return nil, nil
+	}
+	info := packageInfoFromRegistry(purlStr, pkg)
+	if info.LatestVersion == "" {
+		if latest, err := registries.FetchLatestVersionFromPURL(ctx, purlStr, c.client); err == nil && latest != nil {
+			info.LatestVersion = latest.Number
+		}
+	}
+	return info, nil
+}
+
+func packageInfoFromRegistry(purlStr string, pkg *registries.Package) *PackageInfo {
+	ecosystem := purlType(purlStr)
+	return &PackageInfo{
+		Ecosystem:     ecosystem,
+		Name:          pkg.Name,
+		LatestVersion: pkg.LatestVersion,
+		License:       pkg.Licenses,
+		Description:   pkg.Description,
+		Homepage:      pkg.Homepage,
+		Repository:    pkg.Repository,
+		RegistryURL:   extractRegistryURL(purlStr, ecosystem),
+		FundingLinks:  pkg.FundingLinks,
+		Maintainers:   maintainersFromRegistry(pkg.Maintainers),
+		Source:        "registries",
+	}
 }
 
 func purlType(purlStr string) string {

@@ -65,6 +65,51 @@ func TestRegistriesClientBulkLookupUsesSharedLatestPolicy(t *testing.T) {
 	}
 }
 
+func TestRegistriesClientGetPackage(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/example":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{
+  "_id": "example",
+  "versions": {"1.5.0": {}, "1.0.0": {}},
+  "time": {"1.5.0": "2025-01-01T00:00:00Z", "1.0.0": "2026-01-01T00:00:00Z"}
+}`))
+		case "/broken":
+			w.WriteHeader(http.StatusInternalServerError)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+
+	httpClient := registries.NewClient(registryclient.WithHTTPClient(srv.Client()), registryclient.WithMaxRetries(0))
+	c := &RegistriesClient{client: httpClient}
+	repo := "?repository_url=" + url.QueryEscape(srv.URL)
+
+	example := "pkg:npm/example" + repo
+	info, err := c.GetPackage(context.Background(), example)
+	if err != nil {
+		t.Fatalf("GetPackage: %v", err)
+	}
+	bulk, err := c.BulkLookup(context.Background(), []string{example})
+	if err != nil {
+		t.Fatalf("BulkLookup: %v", err)
+	}
+	if info == nil || info.Name != "example" || info.LatestVersion != "1.0.0" || info.Source != "registries" {
+		t.Fatalf("GetPackage() = %+v, want example at latest 1.0.0", info)
+	}
+	if !reflect.DeepEqual(info, bulk[example]) {
+		t.Errorf("GetPackage() = %+v, BulkLookup() = %+v; want the same", info, bulk[example])
+	}
+
+	for _, name := range []string{"missing", "broken"} {
+		if info, err := c.GetPackage(context.Background(), "pkg:npm/"+name+repo); err == nil {
+			t.Errorf("GetPackage(%s) = %+v, nil; want an error", name, info)
+		}
+	}
+}
+
 func TestVersionInfoFromRegistryIncludesStatusAndMetadata(t *testing.T) {
 	publishedAt := time.Date(2024, time.January, 2, 3, 4, 5, 0, time.UTC)
 	got := versionInfoFromRegistry(registries.Version{

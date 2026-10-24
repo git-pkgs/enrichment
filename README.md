@@ -39,6 +39,8 @@ reg := enrichment.NewRegistriesClient()      // direct registry queries only
 dep := enrichment.NewDepsDevClient()         // deps.dev API only
 ```
 
+`RegistriesClient.GetPackage` looks up a single package and, unlike `BulkLookup`, returns the error when the registry can't be queried.
+
 The ecosyste.ms client can also fan out from a source repository URL to the
 packages published from that repository and their dependent packages:
 

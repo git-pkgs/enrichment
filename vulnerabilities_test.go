@@ -13,17 +13,21 @@ type fakeVulnerabilitySource struct {
 	queryResult      []vulns.Vulnerability
 	queryBatchResult [][]vulns.Vulnerability
 	err              error
+	queries          []*purl.PURL
+	batchCalls       int
 }
 
 func (s *fakeVulnerabilitySource) Name() string {
 	return "fake"
 }
 
-func (s *fakeVulnerabilitySource) Query(context.Context, *purl.PURL) ([]vulns.Vulnerability, error) {
+func (s *fakeVulnerabilitySource) Query(_ context.Context, p *purl.PURL) ([]vulns.Vulnerability, error) {
+	s.queries = append(s.queries, p)
 	return s.queryResult, s.err
 }
 
 func (s *fakeVulnerabilitySource) QueryBatch(context.Context, []*purl.PURL) ([][]vulns.Vulnerability, error) {
+	s.batchCalls++
 	return s.queryBatchResult, s.err
 }
 
@@ -91,6 +95,38 @@ func TestVulnerabilityClientCheck(t *testing.T) {
 	}
 	if info.Source != "fake" {
 		t.Errorf("Source = %q, want fake", info.Source)
+	}
+}
+
+func TestVulnerabilityClientRejectsSwiftRegistryIdentities(t *testing.T) {
+	for _, name := range []string{"apple.swift-nio", "apple/swift-nio", "Apple.Swift-NIO", "swift-nio"} {
+		t.Run(name, func(t *testing.T) {
+			source := &fakeVulnerabilitySource{}
+			client := NewVulnerabilityClient(WithVulnerabilitySource(source))
+			if _, err := client.Check(context.Background(), "Swift", name, "2.0.0"); !errors.Is(err, ErrUnsupportedVulnerabilityIdentity) {
+				t.Errorf("Check error = %v, want unsupported identity", err)
+			}
+			if _, err := client.CheckBatch(context.Background(), []VulnerabilityQuery{
+				{Ecosystem: "swift", Name: "github.com/apple/swift-nio", Version: "2.0.0"},
+				{Ecosystem: "swift", Name: name, Version: "2.0.0"},
+			}); !errors.Is(err, ErrUnsupportedVulnerabilityIdentity) {
+				t.Errorf("CheckBatch error = %v, want unsupported identity", err)
+			}
+			if len(source.queries) != 0 || source.batchCalls != 0 {
+				t.Fatalf("unsupported identity reached vulnerability source: queries=%v batchCalls=%d", source.queries, source.batchCalls)
+			}
+		})
+	}
+}
+
+func TestVulnerabilityClientSwiftSourceCoordinate(t *testing.T) {
+	source := &fakeVulnerabilitySource{}
+	client := NewVulnerabilityClient(WithVulnerabilitySource(source))
+	if _, err := client.Check(context.Background(), "Swift", "github.com/Apple/Swift-NIO", "2.0.0"); err != nil {
+		t.Fatal(err)
+	}
+	if len(source.queries) != 1 || source.queries[0] == nil || source.queries[0].String() != "pkg:swift/github.com/Apple/Swift-NIO@2.0.0" {
+		t.Fatalf("queried %v, want source PURL", source.queries)
 	}
 }
 

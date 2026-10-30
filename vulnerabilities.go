@@ -2,6 +2,7 @@ package enrichment
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -10,6 +11,10 @@ import (
 	"github.com/git-pkgs/vulns"
 	"github.com/git-pkgs/vulns/osv"
 )
+
+// ErrUnsupportedVulnerabilityIdentity identifies packages without an identity
+// supported by vulnerability lookups, including Swift registry-only packages.
+var ErrUnsupportedVulnerabilityIdentity = errors.New("package identity is not supported for vulnerability lookups")
 
 // VulnerabilityQuery identifies a package version to check for vulnerabilities.
 type VulnerabilityQuery struct {
@@ -103,6 +108,7 @@ func (c *VulnerabilityClient) Check(ctx context.Context, ecosystem, name, versio
 }
 
 // CheckBatch checks multiple package versions for known vulnerabilities.
+// An unsupported identity rejects the batch before querying the source.
 func (c *VulnerabilityClient) CheckBatch(ctx context.Context, queries []VulnerabilityQuery) ([]VulnerabilityResult, error) {
 	if len(queries) == 0 {
 		return nil, nil
@@ -148,7 +154,17 @@ func vulnerabilityPURL(ecosystem, name, version string) (*purl.PURL, error) {
 	if name == "" {
 		return nil, fmt.Errorf("package name is required")
 	}
-	return purl.MakePURL(ecosystem, name, version), nil
+	p := purl.MakePURL(ecosystem, name, version)
+	if p == nil {
+		return nil, fmt.Errorf("%w: %s package %q", ErrUnsupportedVulnerabilityIdentity, purlType, name)
+	}
+	if p.Type == "swift" {
+		host, _, _ := strings.Cut(p.Namespace, "/")
+		if !strings.Contains(host, ".") {
+			return nil, fmt.Errorf("%w: Swift registry package %q requires source repository coordinates", ErrUnsupportedVulnerabilityIdentity, name)
+		}
+	}
+	return p, nil
 }
 
 func isSupportedVulnerabilityEcosystem(ecosystem, purlType string) bool {

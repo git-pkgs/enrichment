@@ -5,7 +5,7 @@ go 1.26.0
 toolchain go1.26.7
 
 require (
-	github.com/ecosyste-ms/ecosystems-go v0.5.0
+	github.com/ecosyste-ms/ecosystems-go v0.5.1
 	github.com/git-pkgs/purl v0.2.1
 	github.com/git-pkgs/registries v0.13.0
 	github.com/git-pkgs/spdx v0.3.3

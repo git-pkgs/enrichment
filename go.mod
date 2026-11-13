@@ -8,7 +8,7 @@ require (
 	github.com/ecosyste-ms/ecosystems-go v0.5.1
 	github.com/git-pkgs/purl v0.2.1
 	github.com/git-pkgs/registries v0.13.0
-	github.com/git-pkgs/spdx v0.3.3
+	github.com/git-pkgs/spdx v0.3.6
 	github.com/git-pkgs/vers v0.7.2
 	github.com/git-pkgs/vulns v0.2.4
 	github.com/oapi-codegen/nullable v1.2.0
@@ -17,7 +17,7 @@ require (
 require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/git-pkgs/pom v0.1.8 // indirect
-	github.com/github/go-spdx/v2 v2.7.0 // indirect
+	github.com/github/go-spdx/v2 v2.8.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/oapi-codegen/runtime v1.7.0 // indirect
 	github.com/package-url/packageurl-go v0.1.7 // indirect

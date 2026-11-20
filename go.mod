@@ -1,8 +1,8 @@
 module github.com/git-pkgs/enrichment
 
-go 1.26.0
+go 1.27
 
-toolchain go1.26.7
+toolchain go1.27.4
 
 require (
 	github.com/ecosyste-ms/ecosystems-go v0.5.1

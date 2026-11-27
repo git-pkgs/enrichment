@@ -7,12 +7,12 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/ecosyste-ms/ecosystems-go v0.5.1 h1:9XcdEWIE8FHz01GEoM0McMvKEcR/D9yA/ET7aUzDX9g=
 github.com/ecosyste-ms/ecosystems-go v0.5.1/go.mod h1:IhsYBZfxkofxya0O1O2DlhDt281utWJ6VQO0mPVb99I=
-github.com/git-pkgs/pom v0.1.8 h1:mXCuWw6XkrKKZb6IurRZyIznYLPhV5AYg5ZO38Uj/l8=
-github.com/git-pkgs/pom v0.1.8/go.mod h1:sQBeYRzjCUn77fcABPn6I/a1aBHFxm55jTmkNxYtGtw=
+github.com/git-pkgs/pom v0.1.9 h1:gP7nqAS+UXITeRXjHhpyrMHRl9K3sRRBzRLV3+TeqHU=
+github.com/git-pkgs/pom v0.1.9/go.mod h1:sQBeYRzjCUn77fcABPn6I/a1aBHFxm55jTmkNxYtGtw=
 github.com/git-pkgs/purl v0.2.1 h1:b46hRlOMbrG6aXjjFJdYixGi5WTh0TLlAnH9iNeuOS0=
 github.com/git-pkgs/purl v0.2.1/go.mod h1:l8rCfvt5iXVrFIcoQ8+vCLOaHhrtEW2id0LENP+IzMw=
-github.com/git-pkgs/registries v0.13.2 h1:3fWinubUZbBEJ+kDii3O5kzqHJMJBmJK1X9FefAow+I=
-github.com/git-pkgs/registries v0.13.2/go.mod h1:UlX6jcAd4ftRBVVNzB4mQg32tfSNCk/L2pO4Wtplnho=
+github.com/git-pkgs/registries v0.14.0 h1:PQbfRFghM6cN2xu1FcDHS2F73yOMATVIBaq+zY/6uSI=
+github.com/git-pkgs/registries v0.14.0/go.mod h1:zgtz1lneDi8olIzAJxnSvSMT7PzChp9dsbFxJVbfyfQ=
 github.com/git-pkgs/spdx v0.3.6 h1:tbkqeYLKgAcDV1qPZNAkNxpNMTx9EfoNQQhcVEHApzs=
 github.com/git-pkgs/spdx v0.3.6/go.mod h1:7ughkhiQFBYsZRGCBb4pbdBYXQ3y+qZE4rg5MPGmeHs=
 github.com/git-pkgs/vers v0.7.2 h1:Ctex1O+Ai/FONmyDaw37EolBXg0og6UdxbCjjYbeRHs=
@@ -24,6 +24,8 @@ github.com/github/go-spdx/v2 v2.8.0/go.mod h1:Ftc45YYG1WzpzwEPKRVm9Jv8vDqOrN4gWo
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/juju/gnuflag v0.0.0-20171113085948-2ce1bb71843d/go.mod h1:2PavIy+JPciBPrBUjwbNvtwB6RQlve+hkpll6QSNmOE=
+github.com/klauspost/compress v1.20.3 h1:zWNoFqq/lSuYQRim3dUXlXeA0IqwuZGicdG5ZTfY5j4=
+github.com/klauspost/compress v1.20.3/go.mod h1:LUdAzn7YLVvxLpc7y3V1m40wESHTgc1422pwwBSKYuI=
 github.com/oapi-codegen/nullable v1.2.0 h1:VflFkDW980KhBPiFF7nWSyjg+r4Obqj8lXipV0UkP5w=
 github.com/oapi-codegen/nullable v1.2.0/go.mod h1:KUZ3vUzkmEKY90ksAmit2+5juDIhIZhfDl+0PwOQlFY=
 github.com/oapi-codegen/runtime v1.7.0 h1:t7358VYPvNbWJ9gdAkIK/smVeHpBf6yp8VTsaZsb/7k=
@@ -39,6 +41,8 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
+github.com/ulikunitz/xz v0.5.17 h1:flR0y/x1hgM8EGV1AW3Xll6T413G0glV8UfBwR617V4=
+github.com/ulikunitz/xz v0.5.17/go.mod h1:H9Rt/W6/Qj27PGauhQc6nfCDy7vHpzsOThBSaYDoEhw=
 go.yaml.in/yaml/v3 v3.0.6 h1:zcDfvjXEqTQmpjniUBLc91xYJMB2c4QOFxEF/LCEckM=
 go.yaml.in/yaml/v3 v3.0.6/go.mod h1:HVTZu1O7/Vkt2N+BFy8Zza+lnLsABggaTM2ZpNIGuKg=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
